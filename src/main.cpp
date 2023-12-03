@@ -17,6 +17,7 @@
 
 
 #include "udp.h"
+#include "config_parser.h"
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -53,6 +54,9 @@ int main(int, char**)
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 
 
+    //Config parser
+    config_parser = new ConfigParser("../assets/config.json");
+
 
     ImGui::StyleColorsDark();
 
@@ -83,7 +87,7 @@ int main(int, char**)
     {
 
         glfwPollEvents();
-        SendUDPMessage(std::to_string(trhust_engine_1), "192.168.1.1", 5000);
+        SendUDPMessage(std::to_string(trhust_engine_1), config_parser->ip, config_parser->port);
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
