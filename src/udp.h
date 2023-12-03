@@ -1,22 +1,20 @@
-#pragma once
+#ifndef UDP_H
+#define UDP_H
 
 #include <boost/asio.hpp>
 #include <iostream>
 #include <string>
 
-void SendUDPMessage(std::string message, std::string ip, int port)
-{
-    try {
-        boost::asio::io_service io_service;
 
-        boost::asio::ip::udp::resolver resolver(io_service);
-        boost::asio::ip::udp::endpoint receiver_endpoint = *resolver.resolve({boost::asio::ip::udp::v4(), ip, std::to_string(port)}).begin();
-        boost::asio::ip::udp::socket socket(io_service);
-        socket.open(boost::asio::ip::udp::v4());
+struct UDPServer
+{   
+    void Connect(std::string ip, int port);
+    void Send(std::string message);
+    boost::asio::io_service io_service;
+    boost::asio::ip::udp::resolver resolver;
+    boost::asio::ip::udp::endpoint receiver_endpoint;
+    boost::asio::ip::udp::socket socket;
+};
 
-        socket.send_to(boost::asio::buffer(&message, sizeof(message)), receiver_endpoint);
-    }
-    catch (std::exception& e) {
-        std::cerr << e.what() << std::endl;
-    }
-}
+
+#endif // UDP_H

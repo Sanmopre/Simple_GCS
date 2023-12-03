@@ -1,30 +1,17 @@
-// Dear ImGui: standalone example application for GLFW + OpenGL 3, using programmable pipeline
-// (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan/Metal graphics context creation, etc.)
+#include <stdio.h>
+#include <GLFW/glfw3.h>
 
-// Learn about Dear ImGui:
-// - FAQ                  https://dearimgui.com/faq
-// - Getting Started      https://dearimgui.com/getting-started
-// - Documentation        https://dearimgui.com/docs (same as your local docs/ folder).
-// - Introduction, links and more at the top of imgui.cpp
-
+#include "globals.h"
+#include "udp.h"
+#include "config_parser.h"
+#include "imageLoader.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "globals.h"
-#include <stdio.h>
+
 #define GL_SILENCE_DEPRECATION
-#include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
 
-#include "udp.h"
-#include "config_parser.h"
-
-static void glfw_error_callback(int error, const char* description)
-{
-    fprintf(stderr, "GLFW Error %d: %s\n", error, description);
-}
-
-// Main code
 int main(int, char**)
 {
     glfwSetErrorCallback(glfw_error_callback);
@@ -35,10 +22,10 @@ int main(int, char**)
     const char* glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-
+    glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "GCS", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "GCS", nullptr, nullptr);
     if (window == nullptr)
         return 1;
     glfwMakeContextCurrent(window);
@@ -73,8 +60,6 @@ int main(int, char**)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-
-
     io.Fonts->AddFontFromFileTTF("../assets/fonts/CubicCoreMono.ttf", 15.0f);
 
     // Our state
@@ -83,24 +68,65 @@ int main(int, char**)
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     float trhust_engine_1 = 0.0f;
     float trhust_engine_2 = 0.0f;
+
+
+    Image airbus_image;
+    bool ret = LoadTextureFromFile("../assets/images/AirbusLogo.png", &airbus_image);
+    IM_ASSERT(ret);
+
+    Image map_image;
+    ret = LoadTextureFromFile("../assets/images/map.jpeg", &map_image);
+    IM_ASSERT(ret);
+
+    UDPServer udp_server;
+    udp_server.Connect(config_parser->ip, config_parser->port);
+
+
     while (!glfwWindowShouldClose(window))
     {
 
         glfwPollEvents();
-        SendUDPMessage(std::to_string(trhust_engine_1), config_parser->ip, config_parser->port);
+        //SendUDPMessage(std::to_string(trhust_engine_1), config_parser->ip, config_parser->port);
+        udp_server.Send(std::to_string(trhust_engine_1));
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
+        
+        ImGui::ShowDemoWindow(&show_demo_window);
 
-        ImGui::Begin("Hello, world!", nullptr, IMGUI_WINDOW_FLAGS);
+        ImGui::BeginMainMenuBar();  
+        ImGui::Text("GCS");
+        ImGui::SameLine(ImGui::GetWindowWidth() - 80); // Position the button on the right
+        if (ImGui::Selectable("CLOSE", false, ImGuiSelectableFlags_None)) {
+            glfwSetWindowShouldClose(window, true);
+        }
+        ImGui::EndMainMenuBar();
+
+
+        ImGui::Begin("THRUST CONTROLL", nullptr, IMGUI_WINDOW_FLAGS);
         ImGui::Text("Engine 1");
         ImGui::SliderFloat("Thrust 1", &trhust_engine_1, 0.0f, 100.0f);
         ImGui::Text("Engine 2");
         ImGui::SliderFloat("Thrust 2", &trhust_engine_2, 0.0f, 100.0f);
+        ImGui::End();
+
+        ImGui::Begin("LOGO", nullptr, IMGUI_WINDOW_FLAGS);
+        ImGui::Image((void*)(intptr_t)airbus_image.texture, ImVec2(airbus_image.width / 10, airbus_image.height/ 10));
+        ImGui::End();
+
+        ImGui::Begin("MAP", nullptr, IMGUI_WINDOW_FLAGS);
+        ImGui::Image((void*)(intptr_t)map_image.texture, ImVec2(map_image.width / 4, map_image.height / 4));
+        if (ImGui::IsItemHovered())
+        {
+            ImVec2 mouse_pos = ImGui::GetMousePos();
+            ImVec2 item_pos = ImGui::GetItemRectMin();
+            ImVec2 local_pos = ImVec2(mouse_pos.x - item_pos.x, mouse_pos.y - item_pos.y);
+            ImGui::BeginTooltip();
+            ImGui::Text("Pixel position: (%.1f,%.1f)", local_pos.x, local_pos.y);
+            ImGui::EndTooltip();
+        }
         ImGui::End();
 
         // Rendering
