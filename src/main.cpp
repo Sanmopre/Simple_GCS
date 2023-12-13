@@ -66,8 +66,20 @@ int main(int, char**)
     bool show_demo_window = true;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+
     float trhust_engine_1 = 0.0f;
     float trhust_engine_2 = 0.0f;
+
+    float engine_1_temperature = 0.0f;
+    float engine_2_temperature = 0.0f;
+
+    int engine_1_rpm = 0;
+    int engine_2_rpm = 0;
+
+    enum class Flaps { LANDING, TAKEOFF, CRUISE };
+
+    bool both_engines_control = false;
 
 
     Image airbus_image;
@@ -105,16 +117,61 @@ int main(int, char**)
         ImGui::EndMainMenuBar();
 
 
+        //Thrust control
         ImGui::Begin("THRUST CONTROLL", nullptr, IMGUI_WINDOW_FLAGS);
-        ImGui::Text("Engine 1");
-        ImGui::SliderFloat("Thrust 1", &trhust_engine_1, 0.0f, 100.0f);
-        ImGui::Text("Engine 2");
-        ImGui::SliderFloat("Thrust 2", &trhust_engine_2, 0.0f, 100.0f);
+        ImGui::Checkbox("Both engines control", &both_engines_control);
+        if (both_engines_control) 
+        {
+            ImGui::SliderFloat("Thrust Power", &trhust_engine_1, 0.0f, 100.0f);
+            trhust_engine_2 = trhust_engine_1;
+        }
+        else 
+        {
+            ImGui::Text("Engine 1");
+            ImGui::SliderFloat("Thrust Power 1", &trhust_engine_1, 0.0f, 100.0f);
+            ImGui::Text("Engine 2");
+            ImGui::SliderFloat("Thrust Power 2", &trhust_engine_2, 0.0f, 100.0f);
+        }
+
+        std::string temperature_1_string = std::to_string(engine_1_temperature);
+        std::string temperature_2_string = std::to_string(engine_2_temperature);
+        temperature_1_string.append(" C");
+        temperature_2_string.append(" C");
+
+        ImGui::Text("Engine 1 Temperature: ");
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), temperature_1_string.c_str());
+
+        ImGui::Text("Engine 2 Temperature: ");
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(1, 0, 0, 1), temperature_2_string.c_str());
+
+        std::string rpm_1_string = std::to_string(engine_1_rpm);
+        std::string rpm_2_string = std::to_string(engine_2_rpm);
+
+        ImGui::Text("Engine 1 RPM: ");
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(1, 0, 1, 1), rpm_1_string.c_str());
+
+        ImGui::Text("Engine 2 RPM: ");
+        ImGui::SameLine();
+        ImGui::TextColored(ImVec4(1, 0, 1, 1), rpm_2_string.c_str());
         ImGui::End();
 
         ImGui::Begin("LOGO", nullptr, IMGUI_WINDOW_FLAGS);
         ImGui::Image((void*)(intptr_t)airbus_image.texture, ImVec2(airbus_image.width / 10, airbus_image.height/ 10));
         ImGui::End();
+
+
+
+        //Flaps control
+        ImGui::Begin("FLAPS CONTROL", nullptr, IMGUI_WINDOW_FLAGS);
+        static Flaps flaps = Flaps::LANDING;
+        ImGui::RadioButton("LANDING", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps::LANDING)); ImGui::SameLine();
+        ImGui::RadioButton("TAKEOFF", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps::TAKEOFF)); ImGui::SameLine();
+        ImGui::RadioButton("CRUISE", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps::CRUISE));
+        ImGui::End();
+
 
         ImGui::Begin("MAP", nullptr, IMGUI_WINDOW_FLAGS);
         ImGui::Image((void*)(intptr_t)map_image.texture, ImVec2(map_image.width / 4, map_image.height / 4));
