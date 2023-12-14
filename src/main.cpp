@@ -78,7 +78,7 @@ int main(int, char**)
     int engine_2_rpm = 0;
 
     enum class Flaps { LANDING, TAKEOFF, CRUISE };
-
+    static Flaps flaps = Flaps::LANDING;
     bool both_engines_control = false;
 
 
@@ -99,7 +99,10 @@ int main(int, char**)
 
         glfwPollEvents();
         //SendUDPMessage(std::to_string(trhust_engine_1), config_parser->ip, config_parser->port);
-        udp_server.Send(std::to_string(trhust_engine_1));
+
+        std::string message = std::string(std::to_string(trhust_engine_1) + "," + std::to_string(trhust_engine_2) + "," + std::to_string(static_cast<int>(flaps)));
+        udp_server.Send(message);
+
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -166,7 +169,6 @@ int main(int, char**)
 
         //Flaps control
         ImGui::Begin("FLAPS CONTROL", nullptr, IMGUI_WINDOW_FLAGS);
-        static Flaps flaps = Flaps::LANDING;
         ImGui::RadioButton("LANDING", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps::LANDING)); ImGui::SameLine();
         ImGui::RadioButton("TAKEOFF", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps::TAKEOFF)); ImGui::SameLine();
         ImGui::RadioButton("CRUISE", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps::CRUISE));
