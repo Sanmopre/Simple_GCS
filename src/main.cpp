@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <GLFW/glfw3.h>
+#include <boost/asio.hpp>
+#include <thread>
 
 #include "globals.h"
 #include "udp.h"
@@ -101,8 +103,12 @@ int main(int, char**)
     ret = LoadTextureFromFile("../assets/images/map.jpeg", &map_image);
     IM_ASSERT(ret);
 
-    UDPServer udp_server;
-    udp_server.Connect(config_parser->uav_ip, config_parser->uav_port);
+
+    boost::asio::io_service io_service;
+    UDPServer server(io_service, config_parser->uav_ip, config_parser->uav_port, config_parser->local_ip, config_parser->local_port);
+    
+    // Run io_service in a separate thread
+    std::thread io_service_thread([&io_service]() { io_service.run(); });
 
 
     while (!glfwWindowShouldClose(window))
@@ -111,15 +117,16 @@ int main(int, char**)
         glfwPollEvents();
 
         std::string message = std::string(std::to_string(trhust_engine_1) + "," + std::to_string(trhust_engine_2) + "," + std::to_string(static_cast<int>(flaps)));
-        udp_server.Send(message);
+        server.send(message);
+        //std::string response = server.receive();
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), dockspace_flags);
-        udp_server.StartReceive();
-
+        std::string recived_message = server.get_message();
+        std::cout << recived_message << std::endl;
         //bool show_demo_window = true;
         //ImGui::ShowDemoWindow(&show_demo_window);
 
@@ -345,7 +352,8 @@ int main(int, char**)
 
         glfwSwapBuffers(window);
     }
-
+        // Wait for the io_service thread to finish
+    //io_service_thread.join();
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

@@ -2,66 +2,53 @@
 #define UDP_H
 
 #include <boost/asio.hpp>
-#include <iostream>
 #include <string>
+#include <iostream>
 
-struct UDPServer
-{   
-    UDPServer() : resolver(io_service), socket(io_service) {}
-
-    boost::asio::io_service io_service;
-    boost::asio::ip::udp::resolver resolver;
-    boost::asio::ip::udp::endpoint receiver_endpoint;
-    boost::asio::ip::udp::endpoint sender_endpoint;
-    boost::asio::ip::udp::socket socket;
-
-    void Connect(std::string ip, int port)
-    {
-        try {
-            receiver_endpoint = *resolver.resolve({boost::asio::ip::udp::v4(), ip, std::to_string(port)}).begin();
-            socket.open(boost::asio::ip::udp::v4());
-        }
-        catch (std::exception& e) {
-            std::cerr << e.what() << std::endl;
-        }
+class UDPServer {
+public:
+    UDPServer(boost::asio::io_service& io_service, const std::string& send_ip, short send_port, const std::string& recv_ip, short recv_port)
+        : send_socket_(io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), 0)),
+          recv_socket_(io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(recv_ip), recv_port)),
+          send_endpoint_(boost::asio::ip::address::from_string(send_ip), send_port) {
+        start_receive();
     }
 
-    void Send(std::string message)
-    {
-        try {
-            socket.send_to(boost::asio::buffer(message), receiver_endpoint);
-        }
-        catch (std::exception& e) {
-            std::cerr << e.what() << std::endl;
-        }
+    void send(const std::string& message) {
+        send_socket_.send_to(boost::asio::buffer(message), send_endpoint_);
     }
 
-    void StartReceive()
-    {
-        try {
-            char data[1024];
+    void start_receive() {
+        recv_socket_.async_receive_from(
+            recv_buffer_.prepare(1024), recv_endpoint_,
+            [this](boost::system::error_code ec, std::size_t bytes_transferred) {
+                if (!ec) {
+                    // Indicate that the received data is ready to be processed
+                    recv_buffer_.commit(bytes_transferred);
+                    // Convert the received data to a string
+                    std::string message(boost::asio::buffer_cast<const char*>(recv_buffer_.data()), bytes_transferred);
+                    // Print the message
+                    message_ = message;
+                    // Clear the receive buffer
+                    recv_buffer_.consume(bytes_transferred);
+                }
+                // Start another asynchronous receive operation
+                start_receive();
+            });
+    } 
 
-            socket.async_receive_from(boost::asio::buffer(data), sender_endpoint,
-                [this, &data](boost::system::error_code ec, std::size_t bytes_recvd)
-                {
-                    if (!ec && bytes_recvd > 0)
-                    {
-                        std::string message(data, bytes_recvd);
-                        std::cout << "Received message: " << message << std::endl;
-                    }
-                    else
-                    {
-                        std::cerr << "Receive failed: " << ec.message() << std::endl;
-                    }
-
-                    // Start the next receive operation
-                    StartReceive();
-                });
-        }
-        catch (std::exception& e) {
-            std::cerr << e.what() << std::endl;
-        }
+    std::string get_message() {
+        return message_;
     }
+
+
+private:
+    boost::asio::ip::udp::socket send_socket_;
+    boost::asio::ip::udp::socket recv_socket_;
+    boost::asio::ip::udp::endpoint send_endpoint_;
+    boost::asio::ip::udp::endpoint recv_endpoint_;
+    boost::asio::streambuf recv_buffer_;
+    std::string message_;
 };
 
 #endif // UDP_H

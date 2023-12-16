@@ -1,8 +1,8 @@
 {
-    "uav_ip": "139.162.254.208",
-    "uav_port": 5000,
-    "local_ip": "139.162.254.208",
-    "local_port": 5000,
+    "uav_ip": "192.168.1.110",
+    "uav_port": 9124,
+    "local_ip": "192.168.1.119",
+    "local_port": 9123,
     "screen_width": 1920,
     "screen_height": 1080,
     "resizable_windows": true
