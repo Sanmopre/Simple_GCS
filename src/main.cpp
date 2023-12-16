@@ -8,6 +8,7 @@
 #include "config_parser.h"
 #include "imageLoader.h"
 #include "style.h"
+#include "data.h"
 
 #define GL_SILENCE_DEPRECATION
 
@@ -110,6 +111,8 @@ int main(int, char**)
     // Run io_service in a separate thread
     std::thread io_service_thread([&io_service]() { io_service.run(); });
 
+    DroneData drone_data;
+    GCSData gcs_data;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -118,8 +121,11 @@ int main(int, char**)
 
         std::string message = std::string(std::to_string(trhust_engine_1) + "," + std::to_string(trhust_engine_2) + "," + std::to_string(static_cast<int>(flaps)));
         server.send(message);
-        //std::string response = server.receive();
+        std::string response = server.get_message();
 
+        if(response.size() > 0)
+            ParseDroneData(response, drone_data);
+        
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -167,8 +173,8 @@ int main(int, char**)
             trhust_engine_2 = trhust_engine_1;
         }
 
-        std::string temperature_1_string = std::to_string(engine_1_temperature);
-        std::string temperature_2_string = std::to_string(engine_2_temperature);
+        std::string temperature_1_string = std::to_string(drone_data.temperature_engine_1);
+        std::string temperature_2_string = std::to_string(drone_data.temperature_engine_2);
         temperature_1_string.append(" C");
         temperature_2_string.append(" C");
 
@@ -180,8 +186,8 @@ int main(int, char**)
         ImGui::SameLine();
         ImGui::TextColored(ImVec4(1, 0, 0, 1), "%s", temperature_2_string.c_str());
 
-        std::string rpm_1_string = std::to_string(engine_1_rpm);
-        std::string rpm_2_string = std::to_string(engine_2_rpm);
+        std::string rpm_1_string = std::to_string(drone_data.rpm_engine_1);
+        std::string rpm_2_string = std::to_string(drone_data.rpm_engine_2);
 
         ImGui::Text("Engine 1 RPM: ");
         ImGui::SameLine();
@@ -295,14 +301,14 @@ int main(int, char**)
             ImGui::Dummy(ImVec2(0,1));
             ImGui::TextColored(ImVec4(0, 1, 0, 1), "UAV CONNECTED");
             ImGui::Dummy(ImVec2(0,5));
-            ImGui::Text("Latitute: %f", 5.94);
+            ImGui::Text("Latitute: %f", drone_data.latitude);
             ImGui::SameLine();
-            ImGui::Text("Speed: %f", 370.0f);
-            ImGui::Text("Longitute: %f", 45.04f);
+            ImGui::Text("Speed: %f", drone_data.speed);
+            ImGui::Text("Longitute: %f", drone_data.longitude);
             ImGui::SameLine();
-            ImGui::Text("Vertical Speed: %f", 10.0f);
-            ImGui::Text("Altitude: %f", 3200.0f);
-            ImGui::Text("Fuel: %f", 13.4f);
+            ImGui::Text("Vertical Speed: %f", drone_data.vertical_speed);
+            ImGui::Text("Altitude: %f", drone_data.altitude);
+            ImGui::Text("Fuel: %f", drone_data.fuel);
             ImGui::End();
     
             ImGui::Begin("MESSAGE LOG", nullptr, IMGUI_WINDOW_FLAGS);

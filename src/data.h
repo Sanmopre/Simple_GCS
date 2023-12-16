@@ -3,18 +3,19 @@
 
 #include <string>
 #include <sstream>
+#include <iostream>
 
 struct DroneData {
-    int altitude;
-    float speed;
-    float vertical_speed;
-    float latitude;
-    float longitude;
-    float fuel;
-    float temperature_engine_1;
-    float temperature_engine_2;
-    int rpm_engine_1;
-    int rpm_engine_2;
+    int altitude = 0;
+    float speed = 0;
+    float vertical_speed = 0;
+    float latitude = 0;
+    float longitude = 0;
+    float fuel = 0;
+    float temperature_engine_1 = 0;
+    float temperature_engine_2 = 0;
+    int rpm_engine_1 = 0;
+    int rpm_engine_2 = 0;
 };
 
 struct GCSData {
@@ -31,6 +32,7 @@ struct GCSData {
 };
 
 void ParseDroneData(const std::string& message, DroneData& drone_data) {
+    std::cout << message << std::endl;
     std::istringstream iss(message);
     std::string token;
     std::getline(iss, token, ',');
