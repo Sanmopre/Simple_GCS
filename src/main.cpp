@@ -17,6 +17,8 @@ int main(int, char**)
     if (!glfwInit())
         return 1;
 
+    //Config parser
+    config_parser = new ConfigParser("../assets/config.json");
 
     const char* glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -24,7 +26,7 @@ int main(int, char**)
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "GCS", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(config_parser->window_width, config_parser->window_height, "GCS", nullptr, nullptr);
     if (window == nullptr)
         return 1;
     glfwMakeContextCurrent(window);
@@ -40,12 +42,12 @@ int main(int, char**)
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 
 
-    //Config parser
-    config_parser = new ConfigParser("../assets/config.json");
 
+    ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_NoUndocking;
 
-    ImGui::StyleColorsDark();
-
+    if (!config_parser->resizable)
+        dockspace_flags |= ImGuiDockNodeFlags_NoResize;
+    
 
     // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle& style = ImGui::GetStyle();
@@ -100,7 +102,7 @@ int main(int, char**)
     IM_ASSERT(ret);
 
     UDPServer udp_server;
-    udp_server.Connect(config_parser->ip, config_parser->port);
+    udp_server.Connect(config_parser->uav_ip, config_parser->uav_port);
 
 
     while (!glfwWindowShouldClose(window))
@@ -115,8 +117,7 @@ int main(int, char**)
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_NoUndocking| ImGuiDockNodeFlags_NoResize);
-        
+        ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), dockspace_flags);
         udp_server.StartReceive();
 
         //bool show_demo_window = true;
@@ -266,6 +267,7 @@ int main(int, char**)
                 scrolling.x += io.MouseDelta.x;
                 scrolling.y += io.MouseDelta.y;
             }
+
             draw_list->AddImage((void*)(intptr_t)map_image.texture, ImVec2(origin.x, origin.y), ImVec2(origin.x + 2000, origin.y + 2000));
             // Draw grid + all lines in the canvas
             draw_list->PushClipRect(canvas_p0, canvas_p1, true);
@@ -283,6 +285,9 @@ int main(int, char**)
             ImGui::End();
 
             ImGui::Begin("DRONE POSITION", nullptr, IMGUI_WINDOW_FLAGS);
+            ImGui::Dummy(ImVec2(0,1));
+            ImGui::TextColored(ImVec4(0, 1, 0, 1), "UAV CONNECTED");
+            ImGui::Dummy(ImVec2(0,5));
             ImGui::Text("Latitute: %f", 5.94);
             ImGui::SameLine();
             ImGui::Text("Speed: %f", 370.0f);

@@ -1,4 +1,9 @@
 {
-    "ip": "139.162.254.208",
-    "port": 5000
+    "uav_ip": "139.162.254.208",
+    "uav_port": 5000,
+    "local_ip": "139.162.254.208",
+    "local_port": 5000,
+    "screen_width": 1920,
+    "screen_height": 1080,
+    "resizable_windows": true
 }

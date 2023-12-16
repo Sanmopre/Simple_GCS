@@ -14,12 +14,18 @@ public:
         file >> j;
         file.close();
 
-        this->ip = j["ip"];
-        this->port = j["port"];
+        this->uav_ip = j["uav_ip"];
+        this->uav_port = j["uav_port"];
+        this->window_height = j["screen_height"];
+        this->window_width = j["screen_width"];
+        this->resizable = j["resizable_windows"];
     }
 
-    std::string ip;
-    int port;
+    std::string uav_ip;
+    int uav_port;
+    int window_height;
+    int window_width;
+    bool resizable;
 };
 
 ConfigParser* config_parser;
