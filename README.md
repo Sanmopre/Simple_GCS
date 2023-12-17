@@ -1,3 +1,5 @@
+![LOGO](assets/images/logo.png)
+
 # Simple GCS
 
 Simple GCS (Ground Control Station) is a simpler version of a GCS for remote drone piloting. The application sends UDP packets with request information for the UAV (velocity, thrust etc…), and receives packets from the drone with position and status. The application is developed using C++ with ImGui as the UI of choice, and currently simulating the drone there is a python script. The intention of this project is to create an actual drone to be controlled with this GCS. This project was inspired by my work at Airbus Defence and Space where I am currently working on simulations for SIRTAP.
@@ -5,6 +7,7 @@ Simple GCS (Ground Control Station) is a simpler version of a GCS for remote dro
 ## Table of Contents
 
 - [Installation](#installation)
+- [Showcase](#Showcase)
 - [Usage](#usage)
 - [Contributing](#contributing)
 - [License](#license)
@@ -27,9 +30,13 @@ cmake ..
 make
 ```
 
-## Screenshot
+## Showcase
 
-![Screenshot](images/Screenshot.png)
+![Demo](images/showcase.gif)
+
+## Usage
+
+To start using the program just change the configuration file to make the ip addresses point to the right locations, and then run the python scripts under the tests folder for a simple dummy simulation of the UAV.
 
 ## Contributing
 

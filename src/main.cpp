@@ -110,7 +110,7 @@ int main(int, char**)
     float plot_refresh_rate_counter = 0.0f;
 
     Image airbus_image;
-    bool ret = LoadTextureFromFile("../assets/images/AirbusLogo.png", &airbus_image);
+    bool ret = LoadTextureFromFile("../assets/images/logo.png", &airbus_image);
     IM_ASSERT(ret);
 
     Image map_image;
@@ -217,7 +217,7 @@ int main(int, char**)
 
 
         ImGui::Begin("LOGO", nullptr, IMGUI_WINDOW_FLAGS);
-        ImGui::Image((void*)(intptr_t)airbus_image.texture, ImVec2(airbus_image.width / 10, airbus_image.height/ 10));
+        ImGui::Image((void*)(intptr_t)airbus_image.texture, ImVec2(airbus_image.width / 3, airbus_image.height/ 3));
         ImGui::End();
 
 
