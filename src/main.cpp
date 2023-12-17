@@ -2,6 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <boost/asio.hpp>
 #include <thread>
+#include <chrono>
+#include <ctime>
 
 #include "globals.h"
 #include "udp.h"
@@ -46,7 +48,7 @@ int main(int, char**)
 
 
 
-    ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_NoUndocking;
+    ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None; //ImGuiDockNodeFlags_NoUndocking;
 
     if (!config_parser->resizable)
         dockspace_flags |= ImGuiDockNodeFlags_NoResize;
@@ -66,9 +68,17 @@ int main(int, char**)
 
     io.Fonts->AddFontFromFileTTF("../assets/fonts/CubicCoreMono.ttf", 15.0f);
     embraceTheDarkness();
+
+    auto start_time = std::chrono::steady_clock::now();
+
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    std::vector<int> messages;
+    messages.push_back(0);
+    messages.push_back(1);
+    messages.push_back(2);
+    messages.push_back(6);
 
     float trhust_engine_1 = 0.0f;
     float trhust_engine_2 = 0.0f;
@@ -91,9 +101,13 @@ int main(int, char**)
     int vertical_speed = 0;
     int bank = 0;
 
+    static float arr_altitude[720] = {0};
+
     static Flaps flaps = Flaps::LANDING;
     bool split_throttles = false;
 
+    float plot_refresh_rate = 1.0f;
+    float plot_refresh_rate_counter = 0.0f;
 
     Image airbus_image;
     bool ret = LoadTextureFromFile("../assets/images/AirbusLogo.png", &airbus_image);
@@ -116,6 +130,7 @@ int main(int, char**)
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();
+        auto start_loop = std::chrono::steady_clock::now();
         std::string message;
         CreateGCSData(gcs_data, message);
         server.send(message);
@@ -130,7 +145,6 @@ int main(int, char**)
         ImGui::NewFrame();
         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), dockspace_flags);
         std::string recived_message = server.get_message();
-        std::cout << recived_message << std::endl;
         //bool show_demo_window = true;
         //ImGui::ShowDemoWindow(&show_demo_window);
 
@@ -305,19 +319,35 @@ int main(int, char**)
             ImGui::Text("Longitute: %f", drone_data.longitude);
             ImGui::SameLine();
             ImGui::Text("Vertical Speed: %f", drone_data.vertical_speed);
-            ImGui::Text("Altitude: %f", drone_data.altitude);
+            ImGui::Text("Altitude: %d", drone_data.altitude);
             ImGui::Text("Fuel: %f", drone_data.fuel);
             ImGui::End();
     
             ImGui::Begin("MESSAGE LOG", nullptr, IMGUI_WINDOW_FLAGS);
-            ImGui::TextColored(ImVec4(1, 0, 0, 1), "ENGINE 1 TEMPERATURE TOO HIGH");
-            ImGui::TextColored(ImVec4(1, 1, 0, 1), "LOW FUEL");
+
+            for(auto message : messages)
+            {
+                ImVec4 color = ImVec4(1, 1, 1, 1);
+                if(message  > 5)
+                {
+                    color = ImVec4(0.9, 0.8, 0, 1);
+                }
+                else
+                {
+                    color = ImVec4(1, 0, 0, 1);
+                }
+                ImVec2 textSize = ImGui::CalcTextSize(uav_messages_map[message].c_str());
+                ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+                if(plot_refresh_rate_counter > plot_refresh_rate/2.0f)
+                    ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, ImVec2(cursorPos.x + textSize.x, cursorPos.y + textSize.y), ImGui::ColorConvertFloat4ToU32(color));
+                
+                ImGui::TextUnformatted(uav_messages_map[message].c_str());
+            }
             ImGui::End();
 
             ImGui::Begin("TARGETS", nullptr, IMGUI_WINDOW_FLAGS);
         
             ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 40);
-
             ImGui::VSliderInt("##v/s", ImVec2(50, 145), &gcs_data.target_vertical_speed, -500, 500, "%d\nv/s");
             ImGui::SameLine();
             ImGui::VSliderInt("##alt", ImVec2(50, 145), &gcs_data.target_altitude, 0, 10000, "%d\nalt");
@@ -329,10 +359,36 @@ int main(int, char**)
             ImGui::Dummy(ImVec2(50.0f, 0.0f));
             ImGui::SameLine();
             ImGui::Button("SEND", ImVec2(50, 145));
-
             ImGui::PopStyleVar();
+            ImGui::End();
 
+            if(plot_refresh_rate_counter >= plot_refresh_rate){
+                shift_and_add(arr_altitude, 720, (float)drone_data.altitude);
+                plot_refresh_rate_counter = 0;
+            }
+            
 
+            ImGui::Begin("PLOTS", nullptr, IMGUI_WINDOW_FLAGS);
+            ImGui::PlotLines("Altitude", arr_altitude, IM_ARRAYSIZE(arr_altitude));
+            // Get the current time
+            auto now = std::chrono::system_clock::now();
+            auto now_steady = std::chrono::steady_clock::now();
+            std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+            auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now_steady - start_time);
+
+            char date_str[30];
+            char time_str[30];
+            std::strftime(date_str, sizeof(date_str), "%Y-%m-%d", std::localtime(&now_c));
+            std::strftime(time_str, sizeof(time_str), "%H:%M:%S", std::localtime(&now_c));
+
+            ImGui::Text("Date: %s", date_str);
+            ImGui::SameLine();
+            ImGui::Text("Time: %s", time_str);
+
+            int elapsed_hours = elapsed.count() / 3600;
+            int elapsed_minutes = (elapsed.count() % 3600) / 60;
+            int elapsed_seconds = elapsed.count() % 60;
+            ImGui::Text("Time since startup: %02d:%02d:%02d", elapsed_hours, elapsed_minutes, elapsed_seconds);
 
             ImGui::End();
 
@@ -354,7 +410,11 @@ int main(int, char**)
             glfwMakeContextCurrent(backup_current_context);
         }
 
+
         glfwSwapBuffers(window);
+        auto end_loop = std::chrono::steady_clock::now();
+        auto elapsed_loop = std::chrono::duration_cast<std::chrono::milliseconds>(end_loop - start_loop);
+        plot_refresh_rate_counter += elapsed_loop.count()/1000.0f;
     }
         // Wait for the io_service thread to finish
     //io_service_thread.join();

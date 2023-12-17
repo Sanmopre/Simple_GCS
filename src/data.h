@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <map>
 
 struct DroneData {
     int altitude = 0;
@@ -34,7 +35,6 @@ struct GCSData {
 };
 
 void ParseDroneData(const std::string& message, DroneData& drone_data) {
-    std::cout << message << std::endl;
     std::istringstream iss(message);
     std::string token;
     std::getline(iss, token, ',');
@@ -73,5 +73,26 @@ void CreateGCSData(const GCSData& gcs_data, std::string& message) {
         << gcs_data.target_bank;
     message = oss.str();
 }
+
+void shift_and_add(float arr[], int size, float value) {
+    for (int i = 0; i < size - 1; i++) {
+        arr[i] = arr[i + 1];
+    }
+    
+    arr[size - 1] = value;
+}
+
+
+
+std::map<int, std::string> uav_messages_map {
+    {0, "LOW ENGINE 1 RPM"},
+    {1, "LOW ENGINE 2 RPM"},
+    {2, "HIGH ENGINE 1 TEMPERATURE"},
+    {3, "HIGH ENGINE 2 TEMPERATURE"},
+    {4, "HIGH ENGINE 1 RPM"},
+    {5, "HIGH ENGINE 2 RPM"},
+    {6, "LOW FUEL"},
+    {7, "NO UAV CONNECTION"}
+};
 
 #endif // DATA_H

@@ -3,7 +3,7 @@
     "uav_port": 9124,
     "local_ip": "192.168.1.119",
     "local_port": 9123,
-    "screen_width": 1920,
-    "screen_height": 1080,
+    "screen_width": 1280,
+    "screen_height": 720,
     "resizable_windows": true
 }
