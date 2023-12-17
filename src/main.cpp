@@ -91,7 +91,6 @@ int main(int, char**)
     int vertical_speed = 0;
     int bank = 0;
 
-    enum class Flaps { LANDING, TAKEOFF, CRUISE };
     static Flaps flaps = Flaps::LANDING;
     bool split_throttles = false;
 
@@ -116,10 +115,9 @@ int main(int, char**)
 
     while (!glfwWindowShouldClose(window))
     {
-
         glfwPollEvents();
-
-        std::string message = std::string(std::to_string(trhust_engine_1) + "," + std::to_string(trhust_engine_2) + "," + std::to_string(static_cast<int>(flaps)));
+        std::string message;
+        CreateGCSData(gcs_data, message);
         server.send(message);
         std::string response = server.get_message();
 
@@ -153,7 +151,7 @@ int main(int, char**)
             ImGui::Text("Engine 1");
             if(!enable_engine_1)
                 ImGui::BeginDisabled();
-            ImGui::SliderFloat("Thrust Power 1", &trhust_engine_1, 0.0f, 100.0f);
+            ImGui::SliderFloat("Thrust Power 1", &gcs_data.throttle_1, 0.0f, 100.0f);
             if(!enable_engine_1)
                 ImGui::EndDisabled();
 
@@ -161,7 +159,7 @@ int main(int, char**)
             ImGui::Text("Engine 2");
             if(!enable_engine_2)
                 ImGui::BeginDisabled();
-            ImGui::SliderFloat("Thrust Power 2", &trhust_engine_2, 0.0f, 100.0f);
+            ImGui::SliderFloat("Thrust Power 2", &gcs_data.throttle_2, 0.0f, 100.0f);
             if(!enable_engine_2)
                 ImGui::EndDisabled();
 
@@ -169,8 +167,8 @@ int main(int, char**)
         else 
         {
             ImGui::Text("Engines");
-            ImGui::SliderFloat("Thrust Power", &trhust_engine_1, 0.0f, 100.0f);
-            trhust_engine_2 = trhust_engine_1;
+            ImGui::SliderFloat("Thrust Power", &gcs_data.throttle_1, 0.0f, 100.0f);
+            gcs_data.throttle_2 = gcs_data.throttle_1;
         }
 
         std::string temperature_1_string = std::to_string(drone_data.temperature_engine_1);
@@ -210,9 +208,9 @@ int main(int, char**)
 
 
         ImGui::Begin("STABILIZER CONTROL", nullptr, IMGUI_WINDOW_FLAGS);
-        ImGui::SliderFloat("Pitch", &pitch, -90.0f, 90.0f);
-        ImGui::SliderFloat("Roll", &roll, -90.0f, 90.0f);
-        ImGui::SliderFloat("Yaw", &yaw, -90.0f, 90.0f);
+        ImGui::SliderFloat("Pitch", &gcs_data.pitch, -90.0f, 90.0f);
+        ImGui::SliderFloat("Roll", &gcs_data.roll, -90.0f, 90.0f);
+        ImGui::SliderFloat("Yaw", &gcs_data.yaw, -90.0f, 90.0f);
         ImGui::End();
 
 
@@ -320,13 +318,13 @@ int main(int, char**)
         
             ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 40);
 
-            ImGui::VSliderInt("##v/s", ImVec2(50, 145), &vertical_speed, -500, 500, "%d\nv/s");
+            ImGui::VSliderInt("##v/s", ImVec2(50, 145), &gcs_data.target_vertical_speed, -500, 500, "%d\nv/s");
             ImGui::SameLine();
-            ImGui::VSliderInt("##alt", ImVec2(50, 145), &altitude, 0, 10000, "%d\nalt");
+            ImGui::VSliderInt("##alt", ImVec2(50, 145), &gcs_data.target_altitude, 0, 10000, "%d\nalt");
             ImGui::SameLine();
-            ImGui::VSliderInt("##spd", ImVec2(50, 145), &speed, -0, 1500, "%d\nspd");
+            ImGui::VSliderInt("##spd", ImVec2(50, 145), &gcs_data.target_speed, -0, 1500, "%d\nspd");
             ImGui::SameLine();
-            ImGui::VSliderInt("##bnk", ImVec2(50, 145), &bank, -90, 90, "%d\nbnk");
+            ImGui::VSliderInt("##bnk", ImVec2(50, 145), &gcs_data.target_bank, -90, 90, "%d\nbnk");
             ImGui::SameLine();
             ImGui::Dummy(ImVec2(50.0f, 0.0f));
             ImGui::SameLine();

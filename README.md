@@ -13,8 +13,9 @@ Simple GCS (Ground Control Station) is a simpler version of a GCS for remote dro
 
 This project was built using CMake and vcpkg as the package manager, so the instructions will be tailored to those tools. Before you proceed with the setup, ensure that you have CMake and vcpkg installed on your system. If you haven't installed them yet, you can find comprehensive installation instructions on their respective official websites.
 
-[CMake](https://cmake.org/download/)
-[vcpkg](https://vcpkg.io/en/getting-started)
+-[CMake](https://cmake.org/download/)
+
+-[vcpkg](https://vcpkg.io/en/getting-started)
 
 Once you have CMake and vcpkg set up, change the CMakeLists CMAKE_TOOLCHAIN_FILE to fit with your vcpkg path and follow these steps to build and run the project:
 

@@ -18,17 +18,19 @@ struct DroneData {
     int rpm_engine_2 = 0;
 };
 
+enum class Flaps { LANDING, TAKEOFF, CRUISE };
+
 struct GCSData {
-    float throttle_1;
-    float throttle_2;
-    float pitch;
-    float roll;
-    float yaw;
-    int flaps;
-    int target_altitude;
-    int target_speed;
-    int target_vertical_speed;
-    int target_bank;
+    float throttle_1 = 0;
+    float throttle_2 = 0;
+    float pitch = 0;
+    float roll = 0;
+    float yaw = 0;
+    Flaps flaps = Flaps::LANDING;
+    int target_altitude = 0;
+    int target_speed = 0;
+    int target_vertical_speed = 0;
+    int target_bank = 0;
 };
 
 void ParseDroneData(const std::string& message, DroneData& drone_data) {
@@ -64,7 +66,7 @@ void CreateGCSData(const GCSData& gcs_data, std::string& message) {
         << gcs_data.pitch << ','
         << gcs_data.roll << ','
         << gcs_data.yaw << ','
-        << gcs_data.flaps << ','
+        << static_cast<int>(gcs_data.flaps) << ','
         << gcs_data.target_altitude << ','
         << gcs_data.target_speed << ','
         << gcs_data.target_vertical_speed << ','
