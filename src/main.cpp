@@ -181,7 +181,11 @@ int main(int, char**)
         else 
         {
             ImGui::Text("Engines");
+            if(!enable_engine_2 && !enable_engine_1)
+                ImGui::BeginDisabled();
             ImGui::SliderFloat("Thrust Power", &gcs_data.throttle_1, 0.0f, 100.0f);
+            if(!enable_engine_2 && !enable_engine_1)
+                ImGui::EndDisabled();
             gcs_data.throttle_2 = gcs_data.throttle_1;
         }
 
@@ -263,19 +267,11 @@ int main(int, char**)
             const ImVec2 mouse_pos_in_canvas(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
 
             //testing drawing
-            /*
+            
             points.push_back({0.0f, 0.0f});
             points.push_back({100.0f, 100.0f});
-
-            points.push_back({ 100.0f, 100.0f });
             points.push_back({ 200.0f, 100.0f });
-
-            points.push_back({ 200.0f, 100.0f });
-            points.push_back({ 200.0f, 200.0f });
-
-            points.push_back({ 200.0f, 200.0f });
-            points.push_back({ 100.0f, 200.0f });
-            */
+            
 
 
             if(is_hovered)
@@ -303,15 +299,25 @@ int main(int, char**)
             for (float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
                 draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
             
-            for (int n = 0; n < points.Size; n += 2)
-                draw_list->AddLine(ImVec2(origin.x + points[n].x, origin.y + points[n].y), ImVec2(origin.x + points[n + 1].x, origin.y + points[n + 1].y), IM_COL32(255, 255, 0, 255), 2.0f);
+            for (int n = 1; n < points.Size - 1; n++)
+            {
+                draw_list->AddLine(ImVec2(origin.x + points[n - 1].x, origin.y + points[n - 1].y), ImVec2(origin.x + points[n].x, origin.y + points[n].y), IM_COL32(255, 255, 0, 255), 2.0f);
+                std::cout << origin.x + points[n].x << " " << origin.y + points[n].y << std::endl;
+                std::cout << origin.x + points[n - 1].x << " " << origin.y + points[n - 1].y << std::endl;
+                std::cout << std::endl;
+                glfwSetWindowShouldClose(window, true);
+                
+            }
         
             draw_list->PopClipRect();
             ImGui::End();
 
             ImGui::Begin("DRONE POSITION", nullptr, IMGUI_WINDOW_FLAGS);
             ImGui::Dummy(ImVec2(0,1));
-            ImGui::TextColored(ImVec4(0, 1, 0, 1), "UAV CONNECTED");
+            if(response.size() > 0)
+                ImGui::TextColored(ImVec4(0, 1, 0, 1), "UAV CONNECTED");
+            else
+                ImGui::TextColored(ImVec4(1, 0, 0, 1), "UAV DISCONNECTED");
             ImGui::Dummy(ImVec2(0,5));
             ImGui::Text("Latitute: %f", drone_data.latitude);
             ImGui::SameLine();
