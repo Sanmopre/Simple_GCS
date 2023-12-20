@@ -21,6 +21,9 @@ public:
         this->window_height = j["screen_height"];
         this->window_width = j["screen_width"];
         this->resizable = j["resizable_windows"];
+        this->map_file = j["map_file"];
+        this->map_width = j["map_size_x"];
+        this->map_height = j["map_size_y"];
     }
 
     std::string uav_ip;
@@ -32,6 +35,10 @@ public:
     int window_height;
     int window_width;
     bool resizable;
+
+    int map_width = 1000;
+    int map_height = 1000;
+    std::string map_file;
 };
 
 ConfigParser* config_parser;

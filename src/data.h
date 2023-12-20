@@ -83,16 +83,26 @@ void shift_and_add(float arr[], int size, float value) {
 }
 
 
+#define WARNING_MESSAGES_START 8
 
 std::map<int, std::string> uav_messages_map {
+    //CRITIAL
     {0, "LOW ENGINE 1 RPM"},
     {1, "LOW ENGINE 2 RPM"},
-    {2, "HIGH ENGINE 1 TEMPERATURE"},
-    {3, "HIGH ENGINE 2 TEMPERATURE"},
-    {4, "HIGH ENGINE 1 RPM"},
-    {5, "HIGH ENGINE 2 RPM"},
+    {2, "HIGH ENGINE 1 RPM"},
+    {3, "HIGH ENGINE 2 RPM"},
+    {4, "HIGH ENGINE 1 TEMPERATURE"},
+    {5, "HIGH ENGINE 2 TEMPERATURE"},
     {6, "LOW FUEL"},
-    {7, "NO UAV CONNECTION"}
+    {7, "STALL"},
+
+    //WARNING
+    {8, "BAD UAV CONNECTION"},
+    {9, "LESS THAN 50% FUEL"},
+    {10, "LOW ALTITUDE"},
+    {11, "HIGH SPEED"},
+    {12, "OUT OF RANGE"}
+
 };
 
 #endif // DATA_H

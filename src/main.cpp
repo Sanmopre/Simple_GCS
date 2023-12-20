@@ -75,10 +75,11 @@ int main(int, char**)
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     std::vector<int> messages;
-    messages.push_back(0);
+    messages.push_back(3);
     messages.push_back(1);
-    messages.push_back(2);
-    messages.push_back(6);
+    messages.push_back(4);
+    messages.push_back(8);
+    messages.push_back(9);
 
     float trhust_engine_1 = 0.0f;
     float trhust_engine_2 = 0.0f;
@@ -114,7 +115,7 @@ int main(int, char**)
     IM_ASSERT(ret);
 
     Image map_image;
-    ret = LoadTextureFromFile("../assets/images/map.jpeg", &map_image);
+    ret = LoadTextureFromFile(config_parser->map_file.c_str(), &map_image);
     IM_ASSERT(ret);
 
 
@@ -244,11 +245,14 @@ int main(int, char**)
             ImGui::Begin("MAP", nullptr, IMGUI_WINDOW_FLAGS);
             static ImVector<ImVec2> points;
             static ImVec2 scrolling(0.0f, 0.0f);
+            static ImVec2 image_size(config_parser->map_width, config_parser->map_height);
+            static ImVec2 max_scroll(-image_size.x, -image_size.y);
             static bool opt_enable_context_menu = false;
             const float GRID_STEP = 32.0f;
 
             ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
             ImVec2 canvas_sz = ImGui::GetContentRegionAvail();   // Resize canvas to what's available
+
             if (canvas_sz.x < 50.0f) canvas_sz.x = 50.0f;
             if (canvas_sz.y < 50.0f) canvas_sz.y = 50.0f;
             ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
@@ -289,7 +293,21 @@ int main(int, char**)
                 scrolling.y += io.MouseDelta.y;
             }
 
-            draw_list->AddImage((void*)(intptr_t)map_image.texture, ImVec2(origin.x, origin.y), ImVec2(origin.x + 2000, origin.y + 2000));
+            //std::cout << "Scrolling: " << scrolling.x << " " << scrolling.y << std::endl;
+
+            if(scrolling.x < max_scroll.x + canvas_sz.x)
+                scrolling.x = max_scroll.x + canvas_sz.x;
+
+            if(scrolling.y < max_scroll.y + canvas_sz.y)
+                scrolling.y = max_scroll.y + canvas_sz.y;
+
+            if(scrolling.x > 0.0f)
+                scrolling.x = 0.0f;
+
+            if(scrolling.y > 0.0f)
+                scrolling.y = 0.0f;
+
+            draw_list->AddImage((void*)(intptr_t)map_image.texture, ImVec2(origin.x, origin.y), ImVec2(origin.x + image_size.x, origin.y + image_size.y));
             // Draw grid + all lines in the canvas
             draw_list->PushClipRect(canvas_p0, canvas_p1, true);
 
@@ -301,12 +319,7 @@ int main(int, char**)
             
             for (int n = 1; n < points.Size - 1; n++)
             {
-                draw_list->AddLine(ImVec2(origin.x + points[n - 1].x, origin.y + points[n - 1].y), ImVec2(origin.x + points[n].x, origin.y + points[n].y), IM_COL32(255, 255, 0, 255), 2.0f);
-                std::cout << origin.x + points[n].x << " " << origin.y + points[n].y << std::endl;
-                std::cout << origin.x + points[n - 1].x << " " << origin.y + points[n - 1].y << std::endl;
-                std::cout << std::endl;
-                glfwSetWindowShouldClose(window, true);
-                
+                draw_list->AddLine(ImVec2(origin.x + points[n - 1].x, origin.y + points[n - 1].y), ImVec2(origin.x + points[n].x, origin.y + points[n].y), IM_COL32(255, 255, 0, 255), 2.0f);       
             }
         
             draw_list->PopClipRect();
@@ -334,12 +347,14 @@ int main(int, char**)
             for(auto message : messages)
             {
                 ImVec4 color = ImVec4(1, 1, 1, 1);
-                if(message  > 5)
+                if(message  >= WARNING_MESSAGES_START)
                 {
+                    //WARNING COLOR
                     color = ImVec4(0.9, 0.8, 0, 1);
                 }
                 else
                 {
+                    //CRITICAL COLOR
                     color = ImVec4(1, 0, 0, 1);
                 }
                 ImVec2 textSize = ImGui::CalcTextSize(uav_messages_map[message].c_str());
