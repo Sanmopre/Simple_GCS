@@ -6,7 +6,7 @@
     "screen_width": 1280,
     "screen_height": 720,
     "resizable_windows": true,
-    "map_size_x": 3000,
-    "map_size_y": 3000,
+    "map_size_x": 1500,
+    "map_size_y": 1500,
     "map_file": "../assets/images/map.jpeg"
 }

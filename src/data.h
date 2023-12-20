@@ -20,6 +20,7 @@ struct DroneData {
 };
 
 enum class Flaps { LANDING, TAKEOFF, CRUISE };
+enum class Mode { AUTO, MANUAL };
 
 struct GCSData {
     float throttle_1 = 0;
@@ -28,6 +29,7 @@ struct GCSData {
     float roll = 0;
     float yaw = 0;
     Flaps flaps = Flaps::LANDING;
+    Mode mode = Mode::MANUAL;
     int target_altitude = 0;
     int target_speed = 0;
     int target_vertical_speed = 0;

@@ -272,17 +272,17 @@ int main(int, char**)
 
             //testing drawing
             
-            points.push_back({0.0f, 0.0f});
-            points.push_back({100.0f, 100.0f});
-            points.push_back({ 200.0f, 100.0f });
+            //points.push_back({0.0f, 0.0f});
+            //points.push_back({100.0f, 100.0f});
+            //points.push_back({ 200.0f, 100.0f });
             
 
 
             if(is_hovered)
             {
                 ImGui::BeginTooltip();
-                ImGui::Text("Latitute: %f", mouse_pos_in_canvas.x);
-                ImGui::Text("Longitute: %f", mouse_pos_in_canvas.y);
+                ImGui::Text("X: %f", mouse_pos_in_canvas.x);
+                ImGui::Text("Y: %f", mouse_pos_in_canvas.y);
                 ImGui::EndTooltip();
             }
 
@@ -364,6 +364,11 @@ int main(int, char**)
                 
                 ImGui::TextUnformatted(uav_messages_map[message].c_str());
             }
+            ImGui::End();
+            
+            ImGui::Begin("GCS MODE", nullptr, IMGUI_WINDOW_FLAGS);
+            ImGui::RadioButton("MANUAL", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode::MANUAL)); ImGui::SameLine();
+            ImGui::RadioButton("AUTO", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode::AUTO)); ImGui::SameLine();
             ImGui::End();
 
             ImGui::Begin("TARGETS", nullptr, IMGUI_WINDOW_FLAGS);

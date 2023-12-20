@@ -36,8 +36,8 @@ public:
     int window_width;
     bool resizable;
 
-    int map_width = 1000;
-    int map_height = 1000;
+    int map_width;
+    int map_height;
     std::string map_file;
 };
 
