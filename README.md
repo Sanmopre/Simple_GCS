@@ -36,11 +36,11 @@ cmake ..
 make
 ```
 
-
-
 ## Usage
 
 To start using the program just change the configuration file to make the ip addresses point to the right locations, and then run the python scripts under the tests folder for a simple dummy simulation of the UAV.
+
+This GCS will allow for automatic control with the target parameters (speed, altitude, vertical speed and bank angle) and also manual control with the joysticks TCA Officer Pack Airbus Edition. Currently the manual control can be used with the different sliders and buttons.
 
 ## Contributing
 
