@@ -102,6 +102,9 @@ int main(int, char**)
     int vertical_speed = 0;
     int bank = 0;
 
+    ImVec2 gcs_map_position = ImVec2(400.0f, 400.0f);
+    float gcs_range = 125.0f;
+
     static float arr_altitude[720] = {0};
 
     static Flaps flaps = Flaps::LANDING;
@@ -110,12 +113,20 @@ int main(int, char**)
     float plot_refresh_rate = 1.0f;
     float plot_refresh_rate_counter = 0.0f;
 
-    Image airbus_image;
-    bool ret = LoadTextureFromFile("../assets/images/logo.png", &airbus_image);
+    Image logo_image;
+    bool ret = LoadTextureFromFile("../assets/images/logo.png", &logo_image);
     IM_ASSERT(ret);
 
     Image map_image;
     ret = LoadTextureFromFile(config_parser->map_file.c_str(), &map_image);
+    IM_ASSERT(ret);
+
+    Image plane_icon;
+    ret = LoadTextureFromFile(config_parser->plane_icon.c_str(), &plane_icon);
+    IM_ASSERT(ret);
+
+    Image gcs_icon;
+    ret = LoadTextureFromFile(config_parser->gcs_icon.c_str(), &gcs_icon);
     IM_ASSERT(ret);
 
 
@@ -222,7 +233,7 @@ int main(int, char**)
 
 
         ImGui::Begin("LOGO", nullptr, IMGUI_WINDOW_FLAGS);
-        ImGui::Image((void*)(intptr_t)airbus_image.texture, ImVec2(airbus_image.width / 3, airbus_image.height/ 3));
+        ImGui::Image((void*)(intptr_t)logo_image.texture, ImVec2(logo_image.width / 3, logo_image.height/ 3));
         ImGui::End();
 
 
@@ -271,12 +282,16 @@ int main(int, char**)
             const ImVec2 mouse_pos_in_canvas(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
 
             //testing drawing
-            
-            //points.push_back({0.0f, 0.0f});
-            //points.push_back({100.0f, 100.0f});
-            //points.push_back({ 200.0f, 100.0f });
-            
-
+            points.push_back(ImVec2(origin.x + 370,origin.y + 400));
+            points.push_back(ImVec2(origin.x + 370,origin.y + 410));
+            points.push_back(ImVec2(origin.x + 380,origin.y + 415));
+            points.push_back(ImVec2(origin.x + 400,origin.y + 400));
+            points.push_back(ImVec2(origin.x + 420,origin.y + 390));
+            points.push_back(ImVec2(origin.x + 430,origin.y + 380));
+            points.push_back(ImVec2(origin.x + 440,origin.y + 370));
+            points.push_back(ImVec2(origin.x + 440,origin.y + 360));
+            points.push_back(ImVec2(origin.x + 430,origin.y + 340));
+        
 
             if(is_hovered)
             {
@@ -316,17 +331,30 @@ int main(int, char**)
                 draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y), ImVec2(canvas_p0.x + x, canvas_p1.y), IM_COL32(200, 200, 200, 40));
             for (float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
                 draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
+
             
-            for (int n = 1; n < points.Size - 1; n++)
-            {
-                draw_list->AddLine(ImVec2(origin.x + points[n - 1].x, origin.y + points[n - 1].y), ImVec2(origin.x + points[n].x, origin.y + points[n].y), IM_COL32(255, 255, 0, 255), 2.0f);       
-            }
-        
+
+            //GCS Area and icon
+            draw_list->AddCircleFilled(ImVec2(origin.x + gcs_map_position.x, origin.y + gcs_map_position.y), gcs_range, IM_COL32(20, 200, 0, 100));
+            draw_list->AddImage((void*)(intptr_t)gcs_icon.texture, ImVec2(origin.x + gcs_map_position.x - config_parser->icon_size_x/2.0f, origin.y + gcs_map_position.y - config_parser->icon_size_y/2.0f), ImVec2(origin.x + gcs_map_position.x + config_parser->icon_size_x/2.0f, origin.y + gcs_map_position.y + config_parser->icon_size_y/2.0f));
+
+            //Draw the plane path
+            draw_list->AddPolyline(points.Data, points.Size, IM_COL32(255, 255, 0, 255), false, 2.5f);
+            
+
+            //Plane Icon
+            draw_list->AddImage((void*)(intptr_t)plane_icon.texture, ImVec2((-config_parser->icon_size_x/2.0f) + points[points.size() - 1].x,(-config_parser->icon_size_y/2.0f) + points[points.size() - 1].y), ImVec2(config_parser->icon_size_x/2.0f + points[points.size() - 1].x, config_parser->icon_size_y/2.0f + points[points.size() - 1].y));
+            
+            points.erase(points.begin(), points.end());
+
             draw_list->PopClipRect();
             ImGui::End();
 
+
+
             ImGui::Begin("DRONE POSITION", nullptr, IMGUI_WINDOW_FLAGS);
             ImGui::Dummy(ImVec2(0,1));
+
             if(response.size() > 0)
                 ImGui::TextColored(ImVec4(0, 1, 0, 1), "UAV CONNECTED");
             else

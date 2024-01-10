@@ -8,5 +8,9 @@
     "resizable_windows": true,
     "map_size_x": 1500,
     "map_size_y": 1500,
-    "map_file": "../assets/images/map.jpeg"
+    "map_file": "../assets/images/map.jpeg",
+    "plane_icon" : "../assets/images/plane_icon.png",
+    "gcs_icon" : "../assets/images/gcs_icon.png",
+    "icon_size_x" : 30,
+    "icon_size_y" : 30
 }

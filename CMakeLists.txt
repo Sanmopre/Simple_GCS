@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 # set the vcpkg toolchain file
 set(CMAKE_TOOLCHAIN_FILE "/home/sanmopre/vcpkg/scripts/buildsystems/vcpkg.cmake")
 project(GCS)
+#set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-checks=*,-llvmlibc-callee-namespace")
 
 # Set the source files
 file(GLOB_RECURSE SOURCES "src/*.cpp")
