@@ -1,3 +1,0 @@
-/home/sanmopre/GCS_Drone/rrr/CMakeFiles/GCS.dir
-/home/sanmopre/GCS_Drone/rrr/CMakeFiles/edit_cache.dir
-/home/sanmopre/GCS_Drone/rrr/CMakeFiles/rebuild_cache.dir
