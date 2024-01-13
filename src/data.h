@@ -8,6 +8,7 @@
 
 //Protobuf classes
 #include "gcs_data.pb.h"
+#include "drone_data.pb.h"
 
 struct DroneData_Internal {
     int altitude = 0;
@@ -40,43 +41,39 @@ struct GCSData_Internal {
 };
 
 void ParseDroneData(const std::string& message, DroneData_Internal& drone_data) {
-    std::istringstream iss(message);
-    std::string token;
-    std::getline(iss, token, ',');
-    drone_data.altitude = std::stoi(token);
-    std::getline(iss, token, ',');
-    drone_data.speed = std::stof(token);
-    std::getline(iss, token, ',');
-    drone_data.vertical_speed = std::stof(token);
-    std::getline(iss, token, ',');
-    drone_data.latitude = std::stof(token);
-    std::getline(iss, token, ',');
-    drone_data.longitude = std::stof(token);
-    std::getline(iss, token, ',');
-    drone_data.fuel = std::stof(token);
-    std::getline(iss, token, ',');
-    drone_data.temperature_engine_1 = std::stof(token);
-    std::getline(iss, token, ',');
-    drone_data.temperature_engine_2 = std::stof(token);
-    std::getline(iss, token, ',');
-    drone_data.rpm_engine_1 = std::stoi(token);
-    std::getline(iss, token, ',');
-    drone_data.rpm_engine_2 = std::stoi(token);
-}
 
+    DroneData drone_data_pb;
+    drone_data_pb.ParseFromString(message);
+
+    drone_data.altitude = drone_data_pb.altitude();
+    drone_data.speed = drone_data_pb.speed();
+    drone_data.vertical_speed = drone_data_pb.vertical_speed();
+    drone_data.latitude = drone_data_pb.latitude();
+    drone_data.longitude = drone_data_pb.longitude();
+    drone_data.fuel = drone_data_pb.fuel();
+    drone_data.temperature_engine_1 = drone_data_pb.temperature_engine_1();
+    drone_data.temperature_engine_2 = drone_data_pb.temperature_engine_2();
+    drone_data.rpm_engine_1 = drone_data_pb.rpm_engine_1();
+    drone_data.rpm_engine_2 = drone_data_pb.rpm_engine_2();
+}
 void CreateGCSData(const GCSData_Internal& gcs_data, std::string& message) {
-    std::ostringstream oss;
-    oss << gcs_data.throttle_1 << ','
-        << gcs_data.throttle_2 << ','
-        << gcs_data.pitch << ','
-        << gcs_data.roll << ','
-        << gcs_data.yaw << ','
-        << static_cast<int>(gcs_data.flaps) << ','
-        << gcs_data.target_altitude << ','
-        << gcs_data.target_speed << ','
-        << gcs_data.target_vertical_speed << ','
-        << gcs_data.target_bank;
-    message = oss.str();
+
+    GCSData gcs_data_pb;
+    gcs_data_pb.set_throttle_1(gcs_data.throttle_1);
+    gcs_data_pb.set_throttle_2(gcs_data.throttle_2);
+    gcs_data_pb.set_pitch(gcs_data.pitch);
+    gcs_data_pb.set_roll(gcs_data.roll);
+    gcs_data_pb.set_yaw(gcs_data.yaw);
+    gcs_data_pb.set_flaps(static_cast<Flaps>(gcs_data.flaps));
+    gcs_data_pb.set_mode(static_cast<Mode>(gcs_data.mode));
+    gcs_data_pb.set_target_altitude(gcs_data.target_altitude);
+    gcs_data_pb.set_target_speed(gcs_data.target_speed);
+    gcs_data_pb.set_target_vertical_speed(gcs_data.target_vertical_speed);
+    gcs_data_pb.set_target_bank(gcs_data.target_bank);
+
+    gcs_data_pb.SerializeToString(&message);
+
+    std::cout << "GCSData serialized: " << message << std::endl;
 }
 
 void shift_and_add(float arr[], int size, float value) {

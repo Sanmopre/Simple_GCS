@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+message DroneData {
+    int32 altitude = 1;
+    float speed = 2;
+    float vertical_speed = 3;
+    float latitude = 4;
+    float longitude = 5;
+    float fuel = 6;
+    float temperature_engine_1 = 7;
+    float temperature_engine_2 = 8;
+    int32 rpm_engine_1 = 9;
+    int32 rpm_engine_2 = 10;
+}
