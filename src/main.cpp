@@ -11,6 +11,7 @@
 #include "imageLoader.h"
 #include "style.h"
 #include "data.h"
+#include "joystick_input.h"
 
 #define GL_SILENCE_DEPRECATION
 
@@ -107,7 +108,7 @@ int main(int, char**)
 
     static float arr_altitude[720] = {0};
 
-    static Flaps flaps = Flaps::LANDING;
+    static Flaps_Internal flaps = Flaps_Internal::LANDING;
     bool split_throttles = false;
 
     float plot_refresh_rate = 1.0f;
@@ -136,8 +137,10 @@ int main(int, char**)
     // Run io_service in a separate thread
     std::thread io_service_thread([&io_service]() { io_service.run(); });
 
-    DroneData drone_data;
-    GCSData gcs_data;
+    DroneData_Internal drone_data;
+    GCSData_Internal gcs_data;
+
+    JoystickInput joystick_input;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -151,6 +154,21 @@ int main(int, char**)
         if(response.size() > 0)
             ParseDroneData(response, drone_data);
         
+        joystick_input.update();
+
+        InputState input_state = joystick_input.getInputState();
+        input_state.throttle = input_state.throttle * 100.0f;
+        input_state.roll = input_state.roll * 90.0f;
+        input_state.pitch = input_state.pitch * 90.0f;
+        input_state.yaw = input_state.yaw * 90.0f;
+
+    
+        gcs_data.throttle_1 = input_state.throttle;
+        gcs_data.throttle_2 = input_state.throttle;
+        gcs_data.pitch = input_state.pitch;
+        gcs_data.roll = input_state.roll;
+        gcs_data.yaw = input_state.yaw;
+
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -246,9 +264,9 @@ int main(int, char**)
 
         //Flaps control
         ImGui::Begin("FLAPS CONTROL", nullptr, IMGUI_WINDOW_FLAGS);
-        ImGui::RadioButton("LANDING", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps::LANDING)); ImGui::SameLine();
-        ImGui::RadioButton("TAKEOFF", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps::TAKEOFF)); ImGui::SameLine();
-        ImGui::RadioButton("CRUISE", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps::CRUISE));
+        ImGui::RadioButton("LANDING", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps_Internal::LANDING)); ImGui::SameLine();
+        ImGui::RadioButton("TAKEOFF", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps_Internal::TAKEOFF)); ImGui::SameLine();
+        ImGui::RadioButton("CRUISE", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps_Internal::CRUISE));
         ImGui::End();
 
 
@@ -395,8 +413,8 @@ int main(int, char**)
             ImGui::End();
             
             ImGui::Begin("GCS MODE", nullptr, IMGUI_WINDOW_FLAGS);
-            ImGui::RadioButton("MANUAL", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode::MANUAL)); ImGui::SameLine();
-            ImGui::RadioButton("AUTO", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode::AUTO)); ImGui::SameLine();
+            ImGui::RadioButton("MANUAL", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::MANUAL)); ImGui::SameLine();
+            ImGui::RadioButton("AUTO", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::AUTO)); ImGui::SameLine();
             ImGui::End();
 
             ImGui::Begin("TARGETS", nullptr, IMGUI_WINDOW_FLAGS);

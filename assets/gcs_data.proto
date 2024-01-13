@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+enum Flaps {
+  LANDING = 0;
+  TAKEOFF = 1;
+  CRUISE = 2;
+}
+
+enum Mode {
+  MANUAL = 0;
+  AUTO = 1;
+}
+
+message GCSData {
+  float throttle_1 = 1;
+  float throttle_2 = 2;
+  float pitch = 3;
+  float roll = 4;
+  float yaw = 5;
+  Flaps flaps = 6;
+  Mode mode = 7;
+  int32 target_altitude = 8;
+  int32 target_speed = 9;
+  int32 target_vertical_speed = 10;
+  int32 target_bank = 11;
+}

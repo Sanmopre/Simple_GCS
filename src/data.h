@@ -6,7 +6,10 @@
 #include <iostream>
 #include <map>
 
-struct DroneData {
+//Protobuf classes
+#include "gcs_data.pb.h"
+
+struct DroneData_Internal {
     int altitude = 0;
     float speed = 0;
     float vertical_speed = 0;
@@ -19,24 +22,24 @@ struct DroneData {
     int rpm_engine_2 = 0;
 };
 
-enum class Flaps { LANDING, TAKEOFF, CRUISE };
-enum class Mode { AUTO, MANUAL };
+enum class Flaps_Internal { LANDING, TAKEOFF, CRUISE };
+enum class Mode_Internal { AUTO, MANUAL };
 
-struct GCSData {
+struct GCSData_Internal {
     float throttle_1 = 0;
     float throttle_2 = 0;
     float pitch = 0;
     float roll = 0;
     float yaw = 0;
-    Flaps flaps = Flaps::LANDING;
-    Mode mode = Mode::MANUAL;
+    Flaps_Internal flaps = Flaps_Internal::LANDING;
+    Mode_Internal mode = Mode_Internal::MANUAL;
     int target_altitude = 0;
     int target_speed = 0;
     int target_vertical_speed = 0;
     int target_bank = 0;
 };
 
-void ParseDroneData(const std::string& message, DroneData& drone_data) {
+void ParseDroneData(const std::string& message, DroneData_Internal& drone_data) {
     std::istringstream iss(message);
     std::string token;
     std::getline(iss, token, ',');
@@ -61,7 +64,7 @@ void ParseDroneData(const std::string& message, DroneData& drone_data) {
     drone_data.rpm_engine_2 = std::stoi(token);
 }
 
-void CreateGCSData(const GCSData& gcs_data, std::string& message) {
+void CreateGCSData(const GCSData_Internal& gcs_data, std::string& message) {
     std::ostringstream oss;
     oss << gcs_data.throttle_1 << ','
         << gcs_data.throttle_2 << ','
