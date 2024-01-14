@@ -151,24 +151,34 @@ int main(int, char**)
         server.send(message);
         std::string response = server.get_message();
 
-        std::cout << "Recieved message: " << response << std::endl;
         if(response.size() > 0)
             ParseDroneData(response, drone_data);
         
         joystick_input.update();
 
-        InputState input_state = joystick_input.getInputState();
-        input_state.throttle = input_state.throttle * 100.0f;
-        input_state.roll = input_state.roll * 90.0f;
-        input_state.pitch = input_state.pitch * 90.0f;
-        input_state.yaw = input_state.yaw * 90.0f;
 
-    
-        gcs_data.throttle_1 = input_state.throttle;
-        gcs_data.throttle_2 = input_state.throttle;
-        gcs_data.pitch = input_state.pitch;
-        gcs_data.roll = input_state.roll;
-        gcs_data.yaw = input_state.yaw;
+        InputState input_state = joystick_input.getInputState();
+        if(joystick_input.isJoystickPresent())
+        {
+            gcs_data.throttle_1 = input_state.throttle;
+            gcs_data.throttle_2 = input_state.throttle;
+            gcs_data.pitch = input_state.pitch;
+            gcs_data.roll = input_state.roll;
+            gcs_data.yaw = input_state.yaw;
+
+            input_state.throttle = input_state.throttle * 100.0f;
+            input_state.roll = input_state.roll * 90.0f;
+            input_state.pitch = input_state.pitch * 90.0f;
+            input_state.yaw = input_state.yaw * 90.0f;
+
+        
+            gcs_data.throttle_1 = input_state.throttle;
+            gcs_data.throttle_2 = input_state.throttle;
+            gcs_data.pitch = input_state.pitch;
+            gcs_data.roll = input_state.roll;
+            gcs_data.yaw = input_state.yaw;
+        }
+        
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -414,8 +424,12 @@ int main(int, char**)
             ImGui::End();
             
             ImGui::Begin("GCS MODE", nullptr, IMGUI_WINDOW_FLAGS);
-            ImGui::RadioButton("MANUAL", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::MANUAL)); ImGui::SameLine();
-            ImGui::RadioButton("AUTO", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::AUTO)); ImGui::SameLine();
+            ImGui::RadioButton("MANUAL", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::MANUAL)); 
+            ImGui::SameLine();
+            ImGui::RadioButton("AUTO", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::AUTO));
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+            ImGui::TextUnformatted(joystick_input.getJoystickName().c_str());
+            ImGui::PopStyleColor();
             ImGui::End();
 
             ImGui::Begin("TARGETS", nullptr, IMGUI_WINDOW_FLAGS);

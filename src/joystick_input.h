@@ -39,10 +39,15 @@ public:
         return m_state;
     }
 
+    bool isJoystickPresent() 
+    {
+        return joystickPresent;
+    }
+
 private:
 
     std::string m_joystickName;
-
+    bool joystickPresent;
     int m_axesCount;
     int m_buttonCount;
     InputState m_state;
@@ -53,6 +58,7 @@ JoystickInput::JoystickInput()
     m_joystickName = getJoystickName();
     m_axesCount = 0;
     m_buttonCount = 0;
+    joystickPresent = false;
 }
 
 
@@ -69,6 +75,8 @@ void JoystickInput::update()
 
         if (glfwJoystickPresent(GLFW_JOYSTICK_1)) 
         {
+            joystickPresent = true;
+            m_joystickName = getJoystickName();
             const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &m_axesCount);
             const unsigned char* buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &m_buttonCount);
 
@@ -81,6 +89,11 @@ void JoystickInput::update()
             state.flaps_takeoff = buttons[11];
             state.flaps_cruise = buttons[12];
         }
+        else 
+        {
+            joystickPresent = false;
+        }
+
 
         m_state = state;
 }

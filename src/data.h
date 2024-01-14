@@ -40,9 +40,8 @@ struct GCSData_Internal {
     int target_bank = 0;
 };
 
-void ParseDroneData(const std::string& message, DroneData_Internal& drone_data) {
-
-    std::cout << "Recieved message: " << message << std::endl;
+void ParseDroneData(const std::string& message, DroneData_Internal& drone_data) 
+{
     DroneData drone_data_pb;
     drone_data_pb.ParseFromString(message);
 
@@ -59,8 +58,8 @@ void ParseDroneData(const std::string& message, DroneData_Internal& drone_data) 
 
 
 }
-void CreateGCSData(const GCSData_Internal& gcs_data, std::string& message) {
-
+void CreateGCSData(const GCSData_Internal& gcs_data, std::string& message) 
+{
     GCSData gcs_data_pb;
     gcs_data_pb.set_throttle_1(gcs_data.throttle_1);
     gcs_data_pb.set_throttle_2(gcs_data.throttle_2);

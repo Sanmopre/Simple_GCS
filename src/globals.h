@@ -1,6 +1,6 @@
 #pragma once
 
-//#define NO_MOVE
+#define NO_MOVE
 
 #ifdef NO_MOVE
     #define IMGUI_WINDOW_FLAGS ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove
