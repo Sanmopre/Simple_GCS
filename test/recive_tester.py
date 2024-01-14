@@ -1,4 +1,6 @@
 import socket
+import gcs_data_pb2
+from google.protobuf.json_format import MessageToDict
 
 def receive_udp_messages(address, port):
     # Create a UDP socket
@@ -10,27 +12,14 @@ def receive_udp_messages(address, port):
         while True:
             # Receive the message
             data, _ = sock.recvfrom(4096)
-            message = data.decode()
 
-            # Split the message into values
-            values = message.split(',')
+            # Parse the message
+            gcs_data = gcs_data_pb2.GCSData()
+            gcs_data.ParseFromString(data)
 
-            # Parse the values
-            gcs_data = {
-                'throttle_1': float(values[0]),
-                'throttle_2': float(values[1]),
-                'pitch': float(values[2]),
-                'roll': float(values[3]),
-                'yaw': float(values[4]),
-                'flaps': int(values[5]),
-                'target_altitude': float(values[6]),
-                'target_speed': float(values[7]),
-                'target_vertical_speed': float(values[8]),
-                'target_bank': float(values[9]),
-            }
-
-            # Print the data
-            print(gcs_data)
+            # Convert the message to a dictionary and print it
+            gcs_data_dict = MessageToDict(gcs_data)
+            print("Received message from GCS:", gcs_data_dict)
 
     except KeyboardInterrupt:
         # Close the socket when the script is interrupted

@@ -42,6 +42,7 @@ struct GCSData_Internal {
 
 void ParseDroneData(const std::string& message, DroneData_Internal& drone_data) {
 
+    std::cout << "Recieved message: " << message << std::endl;
     DroneData drone_data_pb;
     drone_data_pb.ParseFromString(message);
 
@@ -55,6 +56,8 @@ void ParseDroneData(const std::string& message, DroneData_Internal& drone_data) 
     drone_data.temperature_engine_2 = drone_data_pb.temperature_engine_2();
     drone_data.rpm_engine_1 = drone_data_pb.rpm_engine_1();
     drone_data.rpm_engine_2 = drone_data_pb.rpm_engine_2();
+
+
 }
 void CreateGCSData(const GCSData_Internal& gcs_data, std::string& message) {
 
@@ -72,15 +75,13 @@ void CreateGCSData(const GCSData_Internal& gcs_data, std::string& message) {
     gcs_data_pb.set_target_bank(gcs_data.target_bank);
 
     gcs_data_pb.SerializeToString(&message);
-
-    std::cout << "GCSData serialized: " << message << std::endl;
 }
 
-void shift_and_add(float arr[], int size, float value) {
+void shift_and_add(float arr[], int size, float value) 
+{
     for (int i = 0; i < size - 1; i++) {
         arr[i] = arr[i + 1];
     }
-    
     arr[size - 1] = value;
 }
 

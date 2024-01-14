@@ -1,34 +1,33 @@
-import socket
 import time
+import socket
+import drone_data_pb2
 
-def send_udp_messages(address, port):
+def send_drone_data(address, port):
     # Create a UDP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    
+
+    # Initialize the sums
+    altitude_sum = speed_sum = vertical_speed_sum = latitude_sum = longitude_sum = 0
+    fuel_sum = temperature_engine_1_sum = temperature_engine_2_sum = rpm_engine_1_sum = rpm_engine_2_sum = 0
+
     try:
-        altitude_sum = 0
-        speed_sum = 0
-        vertical_speed_sum = 0
-        latitude_sum = 0
-        longitude_sum = 0
-        fuel_sum = 0
-        temperature_engine_1_sum = 0
-        temperature_engine_2_sum = 0
-        rpm_engine_1_sum = 0
-        rpm_engine_2_sum = 0
-
         while True:
-            altitude = 100 + altitude_sum
-            speed = 20.5 + speed_sum
-            vertical_speed = 10.2 + vertical_speed_sum
-            latitude = 37.421998 + latitude_sum
-            longitude = -122.084 + longitude_sum
-            fuel = 75.5 + fuel_sum 
-            temperature_engine_1 = 85.6 + temperature_engine_1_sum
-            temperature_engine_2 = 95.7 + temperature_engine_2_sum
-            rpm_engine_1 = 2000 + rpm_engine_1_sum
-            rpm_engine_2 = 3000 + rpm_engine_2_sum
+            # Create a new DroneData message
+            drone_data = drone_data_pb2.DroneData()
 
+            # Set the fields of the message
+            drone_data.altitude = 100 + altitude_sum
+            drone_data.speed = 20.5 + speed_sum
+            drone_data.vertical_speed = 10.2 + vertical_speed_sum
+            drone_data.latitude = 37.421998 + latitude_sum
+            drone_data.longitude = -122.084 + longitude_sum
+            drone_data.fuel = 75.5 + fuel_sum
+            drone_data.temperature_engine_1 = 85.6 + temperature_engine_1_sum
+            drone_data.temperature_engine_2 = 95.7 + temperature_engine_2_sum
+            drone_data.rpm_engine_1 = 2000 + rpm_engine_1_sum
+            drone_data.rpm_engine_2 = 3000 + rpm_engine_2_sum
+
+            # Increment the sums
             altitude_sum += 1
             speed_sum += 1
             vertical_speed_sum += 1
@@ -39,14 +38,13 @@ def send_udp_messages(address, port):
             temperature_engine_2_sum += 1
             rpm_engine_1_sum += 1
             rpm_engine_2_sum += 1
-            
 
-            # Format the message
-            message = f"{altitude},{speed},{vertical_speed},{latitude},{longitude},{fuel},{temperature_engine_1},{temperature_engine_2},{rpm_engine_1},{rpm_engine_2}"
-           
+            # Serialize the message to a string
+            serialized_message = drone_data.SerializeToString()
+
             # Send the message
-            sock.sendto(message.encode(), (address, port))
-           
+            sock.sendto(serialized_message, (address, port))
+
             # Delay between messages
             time.sleep(0.1)
 
@@ -55,4 +53,4 @@ def send_udp_messages(address, port):
         sock.close()
 
 # Use the function
-send_udp_messages("192.168.1.119", 9123)
+send_drone_data("192.168.1.110", 9124)

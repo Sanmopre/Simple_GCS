@@ -151,6 +151,7 @@ int main(int, char**)
         server.send(message);
         std::string response = server.get_message();
 
+        std::cout << "Recieved message: " << response << std::endl;
         if(response.size() > 0)
             ParseDroneData(response, drone_data);
         
