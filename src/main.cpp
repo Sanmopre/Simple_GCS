@@ -142,8 +142,11 @@ int main(int, char**)
 
     JoystickInput joystick_input;
 
+    bool manual_mode_selected = false;
+
     while (!glfwWindowShouldClose(window))
     {
+
         glfwPollEvents();
         auto start_loop = std::chrono::steady_clock::now();
         std::string message;
@@ -155,6 +158,7 @@ int main(int, char**)
             ParseDroneData(response, drone_data);
         
         joystick_input.update();
+
 
 
         InputState input_state = joystick_input.getInputState();
@@ -189,6 +193,10 @@ int main(int, char**)
         //bool show_demo_window = true;
         //ImGui::ShowDemoWindow(&show_demo_window);
 
+                bool show_demo_window = true;
+        ImGui::ShowDemoWindow(&show_demo_window);
+
+
         ImGui::BeginMainMenuBar();  
         ImGui::Text("GCS");
         ImGui::SameLine(ImGui::GetWindowWidth() - 80); // Position the button on the right
@@ -197,6 +205,14 @@ int main(int, char**)
         }
         ImGui::EndMainMenuBar();
 
+        if (gcs_data.mode == Mode_Internal::MANUAL)
+            manual_mode_selected = true;
+        else if (gcs_data.mode == Mode_Internal::AUTO)
+            manual_mode_selected = false;
+        
+
+        if(!manual_mode_selected)
+            ImGui::BeginDisabled();
 
         //Thrust control
         ImGui::Begin("THRUST CONTROLL", nullptr, IMGUI_WINDOW_FLAGS);
@@ -259,13 +275,6 @@ int main(int, char**)
         ImGui::Checkbox("Enable Engine 2", &enable_engine_2);
         ImGui::End();
 
-
-
-        ImGui::Begin("LOGO", nullptr, IMGUI_WINDOW_FLAGS);
-        ImGui::Image((void*)(intptr_t)logo_image.texture, ImVec2(logo_image.width / 3, logo_image.height/ 3));
-        ImGui::End();
-
-
         ImGui::Begin("STABILIZER CONTROL", nullptr, IMGUI_WINDOW_FLAGS);
         ImGui::SliderFloat("Pitch", &gcs_data.pitch, -90.0f, 90.0f);
         ImGui::SliderFloat("Roll", &gcs_data.roll, -90.0f, 90.0f);
@@ -280,6 +289,9 @@ int main(int, char**)
         ImGui::RadioButton("CRUISE", reinterpret_cast<int*>(&flaps), static_cast<int>(Flaps_Internal::CRUISE));
         ImGui::End();
 
+
+        if(!manual_mode_selected)
+            ImGui::EndDisabled();
 
             //Map
             ImGui::Begin("MAP", nullptr, IMGUI_WINDOW_FLAGS);
@@ -426,27 +438,10 @@ int main(int, char**)
             ImGui::Begin("GCS MODE", nullptr, IMGUI_WINDOW_FLAGS);
             ImGui::RadioButton("MANUAL", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::MANUAL)); 
             ImGui::SameLine();
-            ImGui::RadioButton("AUTO", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::AUTO));
+            ImGui::RadioButton("TARGET", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::AUTO));
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
             ImGui::TextUnformatted(joystick_input.getJoystickName().c_str());
             ImGui::PopStyleColor();
-            ImGui::End();
-
-            ImGui::Begin("TARGETS", nullptr, IMGUI_WINDOW_FLAGS);
-        
-            ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 40);
-            ImGui::VSliderInt("##v/s", ImVec2(50, 145), &gcs_data.target_vertical_speed, -500, 500, "%d\nv/s");
-            ImGui::SameLine();
-            ImGui::VSliderInt("##alt", ImVec2(50, 145), &gcs_data.target_altitude, 0, 10000, "%d\nalt");
-            ImGui::SameLine();
-            ImGui::VSliderInt("##spd", ImVec2(50, 145), &gcs_data.target_speed, -0, 1500, "%d\nspd");
-            ImGui::SameLine();
-            ImGui::VSliderInt("##bnk", ImVec2(50, 145), &gcs_data.target_bank, -90, 90, "%d\nbnk");
-            ImGui::SameLine();
-            ImGui::Dummy(ImVec2(50.0f, 0.0f));
-            ImGui::SameLine();
-            ImGui::Button("SEND", ImVec2(50, 145));
-            ImGui::PopStyleVar();
             ImGui::End();
 
             if(plot_refresh_rate_counter >= plot_refresh_rate){
@@ -478,6 +473,34 @@ int main(int, char**)
             ImGui::Text("Time since startup: %02d:%02d:%02d", elapsed_hours, elapsed_minutes, elapsed_seconds);
 
             ImGui::End();
+
+
+            if(manual_mode_selected)
+                ImGui::BeginDisabled();
+
+            ImGui::Begin("TARGETS", nullptr, IMGUI_WINDOW_FLAGS);
+        
+            ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 40);
+            ImGui::VSliderInt("##v/s", ImVec2(50, 145), &gcs_data.target_vertical_speed, -500, 500, "%d\nv/s");
+            ImGui::SameLine();
+            ImGui::VSliderInt("##alt", ImVec2(50, 145), &gcs_data.target_altitude, 0, 10000, "%d\nalt");
+            ImGui::SameLine();
+            ImGui::VSliderInt("##spd", ImVec2(50, 145), &gcs_data.target_speed, -0, 1500, "%d\nspd");
+            ImGui::SameLine();
+            ImGui::VSliderInt("##bnk", ImVec2(50, 145), &gcs_data.target_bank, -90, 90, "%d\nbnk");
+            ImGui::SameLine();
+            ImGui::Dummy(ImVec2(50.0f, 0.0f));
+            ImGui::SameLine();
+            ImGui::Button("SEND", ImVec2(50, 145));
+            ImGui::PopStyleVar();
+            ImGui::End();
+
+            if(manual_mode_selected)
+                ImGui::EndDisabled();
+
+        ImGui::Begin("LOGO", nullptr, IMGUI_WINDOW_FLAGS);
+        ImGui::Image((void*)(intptr_t)logo_image.texture, ImVec2(logo_image.width / 3, logo_image.height/ 3));
+        ImGui::End();
 
         // Rendering
         ImGui::Render();
