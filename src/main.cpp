@@ -150,7 +150,9 @@ int main(int, char**)
 
 
     //video testing
-    cv::VideoCapture cap("../assets/images/video.mp4"); // Open the video file
+    cv::VideoCapture cap(config_parser->video_file.c_str()); // Open the video file
+    if (!cap.isOpened())
+        std::cout << "Error opening video stream \n";
     cv::Mat frame;
     GLuint texture;
 
@@ -202,9 +204,6 @@ int main(int, char**)
         std::string recived_message = server.get_message();
         //bool show_demo_window = true;
         //ImGui::ShowDemoWindow(&show_demo_window);
-
-                bool show_demo_window = true;
-        ImGui::ShowDemoWindow(&show_demo_window);
 
 
         ImGui::BeginMainMenuBar();  

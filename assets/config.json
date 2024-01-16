@@ -12,5 +12,6 @@
     "plane_icon" : "../assets/images/plane_icon.png",
     "gcs_icon" : "../assets/images/gcs_icon.png",
     "icon_size_x" : 30,
-    "icon_size_y" : 30
+    "icon_size_y" : 30,
+    "video_file" : "../assets/images/video.mp4"
 }

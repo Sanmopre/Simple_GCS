@@ -28,6 +28,7 @@ public:
         this->gcs_icon = j["gcs_icon"];
         this->icon_size_x = j["icon_size_x"];
         this->icon_size_y = j["icon_size_y"];
+        this->video_file = j["video_file"];
     }
 
     std::string uav_ip;
@@ -47,6 +48,7 @@ public:
     std::string gcs_icon;
     int icon_size_x;
     int icon_size_y;
+    std::string video_file;
 };
 
 ConfigParser* config_parser;
