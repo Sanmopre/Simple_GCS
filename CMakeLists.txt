@@ -13,10 +13,12 @@ find_package(glfw3 CONFIG REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Boost REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(OpenCV REQUIRED)
 
 # Add Protocol Buffers
 find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
+include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS 
     assets/proto_files/gcs_data.proto
@@ -32,3 +34,4 @@ target_link_libraries(GCS PRIVATE OpenGL::GL)
 target_link_libraries(GCS PRIVATE Boost::boost)
 target_link_libraries(GCS PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(GCS PRIVATE ${PROTOBUF_LIBRARIES})
+target_link_libraries(GCS PRIVATE ${OpenCV_LIBS})

@@ -13,6 +13,10 @@
 #include "data.h"
 #include "joystick_input.h"
 
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #define GL_SILENCE_DEPRECATION
 
 
@@ -144,6 +148,12 @@ int main(int, char**)
 
     bool manual_mode_selected = false;
 
+
+    //video testing
+    cv::VideoCapture cap("../assets/images/video.mp4"); // Open the video file
+    cv::Mat frame;
+    GLuint texture;
+
     while (!glfwWindowShouldClose(window))
     {
 
@@ -213,6 +223,29 @@ int main(int, char**)
 
         if(!manual_mode_selected)
             ImGui::BeginDisabled();
+
+
+
+        // In your main loop:
+        if (cap.read(frame)) {
+            // Convert the frame to RGB
+            cv::cvtColor(frame, frame, cv::COLOR_BGR2RGB);
+
+            // Generate a texture from the frame
+            glGenTextures(1, &texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, frame.cols, frame.rows, 0, GL_RGB, GL_UNSIGNED_BYTE, frame.data);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
+        ImGui::Begin("VIDEO");
+        // In your ImGui window:
+        if (texture) {
+            ImGui::Image((void*)(intptr_t)texture, ImVec2(frame.cols, frame.rows));
+        }
+        ImGui::End();
 
         //Thrust control
         ImGui::Begin("THRUST CONTROLL", nullptr, IMGUI_WINDOW_FLAGS);
