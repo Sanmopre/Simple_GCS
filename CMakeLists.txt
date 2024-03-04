@@ -20,6 +20,7 @@ find_package(Protobuf REQUIRED)
 include_directories(${PROTOBUF_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/imgui)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS 
     assets/proto_files/gcs_data.proto
     assets/proto_files/drone_data.proto
@@ -35,3 +36,12 @@ target_link_libraries(GCS PRIVATE Boost::boost)
 target_link_libraries(GCS PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(GCS PRIVATE ${PROTOBUF_LIBRARIES})
 target_link_libraries(GCS PRIVATE ${OpenCV_LIBS})
+
+include(InstallRequiredSystemLibraries)
+install(TARGETS GCS DESTINATION bin)
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")
+set(CPACK_PACKAGE_VERSION_MAJOR "1")
+set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_GENERATOR "DEB")
+set(CPACK_PACKAGE_CONTACT "Santiago Moliner <moliner.santiago@gmail.com>")
+include(CPack)

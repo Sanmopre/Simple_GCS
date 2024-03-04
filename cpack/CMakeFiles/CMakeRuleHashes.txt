@@ -1,0 +1,3 @@
+# Hashes of file build rules.
+0e01d279ce77be68f3475e7b2bfa6937 drone_data.pb.h
+c0945cb60202b4fb01c6f5d3188fce2d gcs_data.pb.h

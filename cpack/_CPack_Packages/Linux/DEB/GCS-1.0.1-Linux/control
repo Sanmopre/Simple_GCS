@@ -1,0 +1,9 @@
+Architecture: amd64
+Description: GCS built using CMake
+Maintainer: Santiago Moliner <moliner.santiago@gmail.com>
+Package: gcs
+Priority: optional
+Section: devel
+Version: 1.0.1
+Installed-Size: 3557
+
