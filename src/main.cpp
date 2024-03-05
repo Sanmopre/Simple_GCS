@@ -12,6 +12,8 @@
 #include "style.h"
 #include "data.h"
 #include "joystick_input.h"
+#include "map.h"
+
 
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -325,210 +327,128 @@ int main(int, char**)
         if(!manual_mode_selected)
             ImGui::EndDisabled();
 
-            //Map
-            ImGui::Begin("MAP", nullptr, IMGUI_WINDOW_FLAGS);
-            static ImVector<ImVec2> points;
-            static ImVec2 scrolling(0.0f, 0.0f);
-            static ImVec2 image_size(config_parser->map_width, config_parser->map_height);
-            static ImVec2 max_scroll(-image_size.x, -image_size.y);
-            static bool opt_enable_context_menu = false;
-            const float GRID_STEP = 32.0f;
 
-            ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
-            ImVec2 canvas_sz = ImGui::GetContentRegionAvail();   // Resize canvas to what's available
+        // Plane points
+        ImVector<ImVec2> planePoints;
+        planePoints.push_back(ImVec2(370, 400));
+        planePoints.push_back(ImVec2(370, 410));
+        planePoints.push_back(ImVec2(380, 415));
+        planePoints.push_back(ImVec2(400, 400));
+        planePoints.push_back(ImVec2(420, 390));
+        planePoints.push_back(ImVec2(430, 380));
+        planePoints.push_back(ImVec2(440, 370));
+        planePoints.push_back(ImVec2(440, 360));
+        planePoints.push_back(ImVec2(430, 340));
 
-            if (canvas_sz.x < 50.0f) canvas_sz.x = 50.0f;
-            if (canvas_sz.y < 50.0f) canvas_sz.y = 50.0f;
-            ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
 
-            // Draw border and background color
-            ImGuiIO& io = ImGui::GetIO();
-            ImDrawList* draw_list = ImGui::GetWindowDrawList();
-            draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255));
-            draw_list->AddRect(canvas_p0, canvas_p1, IM_COL32(255, 255, 255, 255));
+        //Map
+        DrawMap(planePoints, map_image, plane_icon, gcs_icon, gcs_map_position, gcs_range);
 
-            // This will catch our interactions
-            ImGui::InvisibleButton("canvas", canvas_sz, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
-            const bool is_hovered = ImGui::IsItemHovered(); // Hovered
-            const bool is_active = ImGui::IsItemActive();   // Held
-            const ImVec2 origin(canvas_p0.x + scrolling.x, canvas_p0.y + scrolling.y); // Lock scrolled origin
-            const ImVec2 mouse_pos_in_canvas(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
 
-            //testing drawing
-            points.push_back(ImVec2(origin.x + 370,origin.y + 400));
-            points.push_back(ImVec2(origin.x + 370,origin.y + 410));
-            points.push_back(ImVec2(origin.x + 380,origin.y + 415));
-            points.push_back(ImVec2(origin.x + 400,origin.y + 400));
-            points.push_back(ImVec2(origin.x + 420,origin.y + 390));
-            points.push_back(ImVec2(origin.x + 430,origin.y + 380));
-            points.push_back(ImVec2(origin.x + 440,origin.y + 370));
-            points.push_back(ImVec2(origin.x + 440,origin.y + 360));
-            points.push_back(ImVec2(origin.x + 430,origin.y + 340));
-        
+        ImGui::Begin("DRONE POSITION", nullptr, IMGUI_WINDOW_FLAGS);
+        ImGui::Dummy(ImVec2(0,1));
 
-            if(is_hovered)
+        if(response.size() > 0)
+            ImGui::TextColored(ImVec4(0, 1, 0, 1), "UAV CONNECTED");
+        else
+            ImGui::TextColored(ImVec4(1, 0, 0, 1), "UAV DISCONNECTED");
+        ImGui::Dummy(ImVec2(0,5));
+        ImGui::Text("Latitute: %f", drone_data.latitude);
+        ImGui::SameLine();
+        ImGui::Text("Speed: %f", drone_data.speed);
+        ImGui::Text("Longitute: %f", drone_data.longitude);
+        ImGui::SameLine();
+        ImGui::Text("Vertical Speed: %f", drone_data.vertical_speed);
+        ImGui::Text("Altitude: %d", drone_data.altitude);
+        ImGui::Text("Fuel: %f", drone_data.fuel);
+        ImGui::End();
+
+        ImGui::Begin("MESSAGE LOG", nullptr, IMGUI_WINDOW_FLAGS);
+
+        for(auto message : messages)
+        {
+            ImVec4 color = ImVec4(1, 1, 1, 1);
+            if(message  >= WARNING_MESSAGES_START)
             {
-                ImGui::BeginTooltip();
-                ImGui::Text("X: %f", mouse_pos_in_canvas.x);
-                ImGui::Text("Y: %f", mouse_pos_in_canvas.y);
-                ImGui::EndTooltip();
+                //WARNING COLOR
+                color = ImVec4(0.9, 0.8, 0, 1);
             }
-
-            const float mouse_threshold_for_pan = opt_enable_context_menu ? -1.0f : 0.0f;
-            if (is_active && ImGui::IsMouseDragging(ImGuiMouseButton_Right, mouse_threshold_for_pan))
-            {
-                scrolling.x += io.MouseDelta.x;
-                scrolling.y += io.MouseDelta.y;
-            }
-
-            //std::cout << "Scrolling: " << scrolling.x << " " << scrolling.y << std::endl;
-
-            if(scrolling.x < max_scroll.x + canvas_sz.x)
-                scrolling.x = max_scroll.x + canvas_sz.x;
-
-            if(scrolling.y < max_scroll.y + canvas_sz.y)
-                scrolling.y = max_scroll.y + canvas_sz.y;
-
-            if(scrolling.x > 0.0f)
-                scrolling.x = 0.0f;
-
-            if(scrolling.y > 0.0f)
-                scrolling.y = 0.0f;
-
-            draw_list->AddImage((void*)(intptr_t)map_image.texture, ImVec2(origin.x, origin.y), ImVec2(origin.x + image_size.x, origin.y + image_size.y));
-            // Draw grid + all lines in the canvas
-            draw_list->PushClipRect(canvas_p0, canvas_p1, true);
-
-
-            for (float x = fmodf(scrolling.x, GRID_STEP); x < canvas_sz.x; x += GRID_STEP)
-                draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y), ImVec2(canvas_p0.x + x, canvas_p1.y), IM_COL32(200, 200, 200, 40));
-            for (float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
-                draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
-
-            
-
-            //GCS Area and icon
-            draw_list->AddCircleFilled(ImVec2(origin.x + gcs_map_position.x, origin.y + gcs_map_position.y), gcs_range, IM_COL32(20, 200, 0, 100));
-            draw_list->AddImage((void*)(intptr_t)gcs_icon.texture, ImVec2(origin.x + gcs_map_position.x - config_parser->icon_size_x/2.0f, origin.y + gcs_map_position.y - config_parser->icon_size_y/2.0f), ImVec2(origin.x + gcs_map_position.x + config_parser->icon_size_x/2.0f, origin.y + gcs_map_position.y + config_parser->icon_size_y/2.0f));
-
-            //Draw the plane path
-            draw_list->AddPolyline(points.Data, points.Size, IM_COL32(255, 255, 0, 255), false, 2.5f);
-            
-
-            //Plane Icon
-            draw_list->AddImage((void*)(intptr_t)plane_icon.texture, ImVec2((-config_parser->icon_size_x/2.0f) + points[points.size() - 1].x,(-config_parser->icon_size_y/2.0f) + points[points.size() - 1].y), ImVec2(config_parser->icon_size_x/2.0f + points[points.size() - 1].x, config_parser->icon_size_y/2.0f + points[points.size() - 1].y));
-            
-            points.erase(points.begin(), points.end());
-
-            draw_list->PopClipRect();
-            ImGui::End();
-
-
-
-            ImGui::Begin("DRONE POSITION", nullptr, IMGUI_WINDOW_FLAGS);
-            ImGui::Dummy(ImVec2(0,1));
-
-            if(response.size() > 0)
-                ImGui::TextColored(ImVec4(0, 1, 0, 1), "UAV CONNECTED");
             else
-                ImGui::TextColored(ImVec4(1, 0, 0, 1), "UAV DISCONNECTED");
-            ImGui::Dummy(ImVec2(0,5));
-            ImGui::Text("Latitute: %f", drone_data.latitude);
-            ImGui::SameLine();
-            ImGui::Text("Speed: %f", drone_data.speed);
-            ImGui::Text("Longitute: %f", drone_data.longitude);
-            ImGui::SameLine();
-            ImGui::Text("Vertical Speed: %f", drone_data.vertical_speed);
-            ImGui::Text("Altitude: %d", drone_data.altitude);
-            ImGui::Text("Fuel: %f", drone_data.fuel);
-            ImGui::End();
-    
-            ImGui::Begin("MESSAGE LOG", nullptr, IMGUI_WINDOW_FLAGS);
-
-            for(auto message : messages)
             {
-                ImVec4 color = ImVec4(1, 1, 1, 1);
-                if(message  >= WARNING_MESSAGES_START)
-                {
-                    //WARNING COLOR
-                    color = ImVec4(0.9, 0.8, 0, 1);
-                }
-                else
-                {
-                    //CRITICAL COLOR
-                    color = ImVec4(1, 0, 0, 1);
-                }
-                ImVec2 textSize = ImGui::CalcTextSize(uav_messages_map[message].c_str());
-                ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-                if(plot_refresh_rate_counter > plot_refresh_rate/2.0f)
-                    ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, ImVec2(cursorPos.x + textSize.x, cursorPos.y + textSize.y), ImGui::ColorConvertFloat4ToU32(color));
-                
-                ImGui::TextUnformatted(uav_messages_map[message].c_str());
+                //CRITICAL COLOR
+                color = ImVec4(1, 0, 0, 1);
             }
-            ImGui::End();
+            ImVec2 textSize = ImGui::CalcTextSize(uav_messages_map[message].c_str());
+            ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+            if(plot_refresh_rate_counter > plot_refresh_rate/2.0f)
+                ImGui::GetWindowDrawList()->AddRectFilled(cursorPos, ImVec2(cursorPos.x + textSize.x, cursorPos.y + textSize.y), ImGui::ColorConvertFloat4ToU32(color));
             
-            ImGui::Begin("GCS MODE", nullptr, IMGUI_WINDOW_FLAGS);
-            ImGui::RadioButton("MANUAL", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::MANUAL)); 
-            ImGui::SameLine();
-            ImGui::RadioButton("TARGET", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::AUTO));
-            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
-            ImGui::TextUnformatted(joystick_input.getJoystickName().c_str());
-            ImGui::PopStyleColor();
-            ImGui::End();
-
-            if(plot_refresh_rate_counter >= plot_refresh_rate){
-                shift_and_add(arr_altitude, 720, (float)drone_data.altitude);
-                plot_refresh_rate_counter = 0;
-            }
-            
-
-            ImGui::Begin("PLOTS", nullptr, IMGUI_WINDOW_FLAGS);
-            ImGui::PlotLines("Altitude", arr_altitude, IM_ARRAYSIZE(arr_altitude));
-            // Get the current time
-            auto now = std::chrono::system_clock::now();
-            auto now_steady = std::chrono::steady_clock::now();
-            std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-            auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now_steady - start_time);
-
-            char date_str[30];
-            char time_str[30];
-            std::strftime(date_str, sizeof(date_str), "%Y-%m-%d", std::localtime(&now_c));
-            std::strftime(time_str, sizeof(time_str), "%H:%M:%S", std::localtime(&now_c));
-
-            ImGui::Text("Date: %s", date_str);
-            ImGui::SameLine();
-            ImGui::Text("Time: %s", time_str);
-
-            int elapsed_hours = elapsed.count() / 3600;
-            int elapsed_minutes = (elapsed.count() % 3600) / 60;
-            int elapsed_seconds = elapsed.count() % 60;
-            ImGui::Text("Time since startup: %02d:%02d:%02d", elapsed_hours, elapsed_minutes, elapsed_seconds);
-
-            ImGui::End();
-
-
-            if(manual_mode_selected)
-                ImGui::BeginDisabled();
-
-            ImGui::Begin("TARGETS", nullptr, IMGUI_WINDOW_FLAGS);
+            ImGui::TextUnformatted(uav_messages_map[message].c_str());
+        }
+        ImGui::End();
         
-            ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 40);
-            ImGui::VSliderInt("##v/s", ImVec2(50, 145), &gcs_data.target_vertical_speed, -500, 500, "%d\nv/s");
-            ImGui::SameLine();
-            ImGui::VSliderInt("##alt", ImVec2(50, 145), &gcs_data.target_altitude, 0, 10000, "%d\nalt");
-            ImGui::SameLine();
-            ImGui::VSliderInt("##spd", ImVec2(50, 145), &gcs_data.target_speed, -0, 1500, "%d\nspd");
-            ImGui::SameLine();
-            ImGui::VSliderInt("##bnk", ImVec2(50, 145), &gcs_data.target_bank, -90, 90, "%d\nbnk");
-            ImGui::SameLine();
-            ImGui::Dummy(ImVec2(50.0f, 0.0f));
-            ImGui::SameLine();
-            ImGui::Button("SEND", ImVec2(50, 145));
-            ImGui::PopStyleVar();
-            ImGui::End();
+        ImGui::Begin("GCS MODE", nullptr, IMGUI_WINDOW_FLAGS);
+        ImGui::RadioButton("MANUAL", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::MANUAL)); 
+        ImGui::SameLine();
+        ImGui::RadioButton("TARGET", reinterpret_cast<int*>(&gcs_data.mode), static_cast<int>(Mode_Internal::AUTO));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0, 1, 0, 1));
+        ImGui::TextUnformatted(joystick_input.getJoystickName().c_str());
+        ImGui::PopStyleColor();
+        ImGui::End();
 
-            if(manual_mode_selected)
-                ImGui::EndDisabled();
+        if(plot_refresh_rate_counter >= plot_refresh_rate){
+            shift_and_add(arr_altitude, 720, (float)drone_data.altitude);
+            plot_refresh_rate_counter = 0;
+        }
+        
+
+        ImGui::Begin("PLOTS", nullptr, IMGUI_WINDOW_FLAGS);
+        ImGui::PlotLines("Altitude", arr_altitude, IM_ARRAYSIZE(arr_altitude));
+        // Get the current time
+        auto now = std::chrono::system_clock::now();
+        auto now_steady = std::chrono::steady_clock::now();
+        std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now_steady - start_time);
+
+        char date_str[30];
+        char time_str[30];
+        std::strftime(date_str, sizeof(date_str), "%Y-%m-%d", std::localtime(&now_c));
+        std::strftime(time_str, sizeof(time_str), "%H:%M:%S", std::localtime(&now_c));
+
+        ImGui::Text("Date: %s", date_str);
+        ImGui::SameLine();
+        ImGui::Text("Time: %s", time_str);
+
+        int elapsed_hours = elapsed.count() / 3600;
+        int elapsed_minutes = (elapsed.count() % 3600) / 60;
+        int elapsed_seconds = elapsed.count() % 60;
+        ImGui::Text("Time since startup: %02d:%02d:%02d", elapsed_hours, elapsed_minutes, elapsed_seconds);
+
+        ImGui::End();
+
+
+        if(manual_mode_selected)
+            ImGui::BeginDisabled();
+
+        ImGui::Begin("TARGETS", nullptr, IMGUI_WINDOW_FLAGS);
+    
+        ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 40);
+        ImGui::VSliderInt("##v/s", ImVec2(50, 145), &gcs_data.target_vertical_speed, -500, 500, "%d\nv/s");
+        ImGui::SameLine();
+        ImGui::VSliderInt("##alt", ImVec2(50, 145), &gcs_data.target_altitude, 0, 10000, "%d\nalt");
+        ImGui::SameLine();
+        ImGui::VSliderInt("##spd", ImVec2(50, 145), &gcs_data.target_speed, -0, 1500, "%d\nspd");
+        ImGui::SameLine();
+        ImGui::VSliderInt("##bnk", ImVec2(50, 145), &gcs_data.target_bank, -90, 90, "%d\nbnk");
+        ImGui::SameLine();
+        ImGui::Dummy(ImVec2(50.0f, 0.0f));
+        ImGui::SameLine();
+        ImGui::Button("SEND", ImVec2(50, 145));
+        ImGui::PopStyleVar();
+        ImGui::End();
+
+        if(manual_mode_selected)
+            ImGui::EndDisabled();
 
         ImGui::Begin("LOGO", nullptr, IMGUI_WINDOW_FLAGS);
         ImGui::Image((void*)(intptr_t)logo_image.texture, ImVec2(logo_image.width / 3, logo_image.height/ 3));
@@ -558,7 +478,8 @@ int main(int, char**)
         auto elapsed_loop = std::chrono::duration_cast<std::chrono::milliseconds>(end_loop - start_loop);
         plot_refresh_rate_counter += elapsed_loop.count()/1000.0f;
     }
-        // Wait for the io_service thread to finish
+        
+    // Wait for the io_service thread to finish
     //io_service_thread.join();
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
