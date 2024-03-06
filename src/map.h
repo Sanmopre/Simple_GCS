@@ -42,8 +42,6 @@ void DrawMap(ImVector<ImVec2>& planePoints, Image map_image, Image plane_icon, I
     // Draw border and background color
     ImGuiIO& io = ImGui::GetIO();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255));
-    draw_list->AddRect(canvas_p0, canvas_p1, IM_COL32(255, 255, 255, 255));
 
     // This will catch our interactions
     ImGui::InvisibleButton("canvas", canvas_sz, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
@@ -92,7 +90,6 @@ void DrawMap(ImVector<ImVec2>& planePoints, Image map_image, Image plane_icon, I
         draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y), ImVec2(canvas_p0.x + x, canvas_p1.y), GRID_COLOR);
     for (float y = fmodf(scrolling.y, MAP_GRID_STEP); y < canvas_sz.y; y += MAP_GRID_STEP)
         draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), GRID_COLOR);
-
 
 
     //GCS Area and icon

@@ -397,7 +397,7 @@ int main(int, char**)
         ImGui::End();
 
         if(plot_refresh_rate_counter >= plot_refresh_rate){
-            shift_and_add(arr_altitude, 720, (float)drone_data.altitude);
+            shift_and_add(arr_altitude, HISTOGRAM_SIZE, (float)drone_data.altitude);
             plot_refresh_rate_counter = 0;
         }
         
@@ -480,7 +480,9 @@ int main(int, char**)
     }
         
     // Wait for the io_service thread to finish
-    //io_service_thread.join();
+    io_service.stop();
+    io_service_thread.join();
+
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

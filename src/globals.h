@@ -8,7 +8,7 @@
     #define IMGUI_WINDOW_FLAGS ImGuiWindowFlags_None
 #endif
 
-
+#define HISTOGRAM_SIZE 720
 
 static void glfw_error_callback(int error, const char* description)
 {
